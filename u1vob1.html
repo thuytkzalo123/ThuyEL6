@@ -1,0 +1,1029 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title> Bài tâp từ vựng - Unit 1 </title>
+    <style>
+        :root {
+            --primary-blue: #e8f0fe;
+            --dark-blue: #1a73e8;
+            --border-color: #dadce0;
+            --correct-green: #1e8e3e;
+            --wrong-red: #d93025;
+            --trans-color: #5f6368;
+            --hint-bg: #fff8e1;
+            --hint-text: #f57f17;
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* === HEADER === */
+        .header {
+            background: white;
+            padding: 10px 20px;
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 101;
+            flex-shrink: 0;
+        }
+
+        .header-top {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            cursor: pointer;
+            color: #5f6368;
+            padding: 5px;
+        }
+
+        .header-title {
+            margin: 0;
+            font-size: 1.2em;
+            color: #202124;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .progress-container {
+            width: 100%;
+            height: 6px;
+            background-color: #eee;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+
+        #progress-bar {
+            width: 0%;
+            height: 100%;
+            background-color: var(--dark-blue);
+            border-radius: 4px;
+            transition: width 0.4s ease;
+        }
+
+        /* === MAIN LAYOUT === */
+        .main-container {
+            display: flex;
+            flex: 1;
+            padding: 20px;
+            gap: 25px;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+
+        /* === SIDEBAR === */
+        .sidebar {
+            width: 280px;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            height: calc(100% - 40px);
+            overflow-y: auto;
+            flex-shrink: 0;
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+        }
+
+        .stats-box {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border: 1px solid #eee;
+        }
+        
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.95em;
+            color: #333;
+        }
+        
+        .stat-value {
+            font-weight: bold;
+            color: var(--dark-blue);
+        }
+
+        .nav-container {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+
+        .question-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+        }
+
+        .q-num {
+            aspect-ratio: 1;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 0.9em;
+            background: #fff;
+        }
+
+        .q-num.done-correct { background-color: #e6f4ea; border-color: var(--correct-green); color: var(--correct-green); font-weight: bold; }
+        .q-num.done-wrong { background-color: #fce8e6; border-color: var(--wrong-red); color: var(--wrong-red); font-weight: bold; }
+
+        .btn-submit {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--dark-blue);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1em;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        /* === QUIZ AREA === */
+        .quiz-area {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 5px;
+            padding-bottom: 20px;
+        }
+
+        .question-card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .question-text {
+            font-size: 1.1em;
+            font-weight: 600;
+            margin-bottom: 12px;
+            line-height: 1.5;
+            color: #202124;
+        }
+
+        .btn-hint-toggle {
+            align-self: flex-start;
+            background-color: white;
+            border: 1px solid #ffb74d;
+            color: #f57f17;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-bottom: 15px;
+        }
+
+        .hint-content {
+            display: none;
+            background-color: #fff3e0;
+            border-left: 4px solid #ffb74d;
+            padding: 10px 15px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+            font-size: 0.95em;
+            color: #e65100;
+        }
+        .hint-content.show { display: block; animation: fadeIn 0.3s; }
+
+        .options-list {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .option-btn {
+            padding: 14px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: white;
+            text-align: left;
+            cursor: pointer;
+            font-size: 1em;
+            display: flex;
+            flex-direction: column;
+            line-height: 1.4;
+            transition: background-color 0.2s;
+        }
+
+        .option-btn:active { background-color: #f1f3f4; }
+        .option-btn.disabled { cursor: default; opacity: 0.9; }
+        .option-btn.correct { background-color: #e6f4ea; border-color: var(--correct-green); color: var(--correct-green); }
+        .option-btn.wrong { background-color: #fce8e6; border-color: var(--wrong-red); color: var(--wrong-red); }
+
+        .btn-trans-toggle {
+            margin-top: 20px;
+            align-self: flex-start;
+            background: #f1f3f4;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            color: #555;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 500;
+        }
+        .btn-trans-toggle:disabled { opacity: 0.5; background-color: #eee; }
+
+        .trans-text {
+            display: none;
+            color: var(--trans-color);
+            font-style: italic;
+            font-size: 0.95em;
+            margin-top: 5px;
+            font-weight: normal;
+            border-top: 1px dashed #eee;
+            padding-top: 4px;
+        }
+        .trans-text.show { display: block; animation: fadeIn 0.3s; }
+
+        .explanation-box {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 6px;
+            background-color: #fffde7;
+            border-left: 4px solid #fbc02d;
+            display: none;
+            font-size: 0.95em;
+        }
+
+        /* === MODAL === */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            animation: zoomIn 0.3s;
+        }
+        .modal-score { font-size: 3.5em; font-weight: bold; color: var(--dark-blue); margin: 10px 0; }
+        .modal-details { margin: 20px 0; background: #f8f9fa; padding: 15px; border-radius: 8px; }
+        .modal-btn { padding: 12px 30px; background: var(--dark-blue); color: white; border: none;
+        border-radius: 8px; font-size: 1.1em; cursor: pointer; width: 100%; }
+
+        /* === RESPONSIVE FIXES === */
+        @media (max-width: 768px) {
+            .menu-toggle { display: block; }
+            body { height: auto; overflow: auto; }
+            .main-container { padding: 10px; display: block; height: auto; overflow: visible; }
+            .sidebar { position: fixed; top: 0; left: 0; width: 80%; max-width: 300px; height: 100%; margin: 0; border-radius: 0; border: none; transform: translateX(-100%); box-shadow: 2px 0 10px rgba(0,0,0,0.2); }
+            .sidebar.active { transform: translateX(0); }
+            .sidebar-overlay.active { display: block; }
+            .quiz-area { padding: 0; height: auto; overflow: visible; margin-bottom: 50px; }
+            .question-card { padding: 15px; margin-bottom: 15px; }
+            .options-list { grid-template-columns: 1fr; }
+            .header-title { font-size: 1em; }
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes zoomIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        /* === LOGIN OVERLAY === */
+        #login-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .login-box {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 350px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+        .login-input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 1em;
+        }
+        .login-error {
+            color: var(--wrong-red);
+            font-size: 0.9em;
+            margin-bottom: 10px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="login-overlay">
+        <div class="login-box">
+            <h2 style="margin-top: 0; color: var(--dark-blue);">Đăng nhập</h2>
+            <p style="font-size: 0.9em; color: #555;">Vui lòng nhập thông tin để làm bài</p>
+            <input type="text" id="student-name" class="login-input" placeholder="Họ và Tên của bạn" required>
+            <input type="password" id="student-pass" class="login-input" placeholder="Nhập mật khẩu" required>
+            <div id="login-error" class="login-error">Mật khẩu không đúng hoặc chưa nhập tên!</div>
+            <button class="btn-submit" onclick="checkLogin()">Vào làm</button>
+        </div>
+    </div>
+
+    <div class="header">
+        <div class="header-top">
+            <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+            <h2 class="header-title">Bài tâp từ vựng - Unit 1</h2>
+        </div>
+        <div class="progress-container">
+            <div id="progress-bar"></div>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+        <div class="sidebar" id="sidebar">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h3 style="margin:0 0 10px 0; color:#444">Thống kê</h3>
+                <span onclick="toggleSidebar()" style="cursor:pointer; font-size:1.5em; color:#888; padding: 5px;" class="mobile-only">✕</span>
+            </div>
+            
+            <div class="stats-box">
+                <div class="stat-item">
+                    <span>Số câu đúng:</span>
+                    <span class="stat-value"><span id="stat-correct">0</span>/<span id="stat-total">60</span></span>
+                </div>
+                <div class="stat-item">
+                    <span>Điểm số:</span>
+                    <span class="stat-value"><span id="stat-score">0.0</span>/10</span>
+                </div>
+            </div>
+
+            <div class="nav-container">
+                <h4 style="margin:0 0 10px 0;">Danh sách câu hỏi</h4>
+                <div class="question-grid" id="q-nav"></div>
+            </div>
+
+            <button class="btn-submit" onclick="submitQuiz()">Nộp bài</button>
+        </div>
+
+        <div class="quiz-area" id="quiz-container"></div>
+    </div>
+
+    <div class="modal-overlay" id="result-modal">
+        <div class="modal-content">
+            <h2 style="color: #444; margin-top:0">Kết Quả</h2>
+            <div>Điểm số của bạn</div>
+            <div class="modal-score" id="final-score">0.0</div>
+            
+            <div class="modal-details">
+                <p>Số câu đúng: <b id="final-correct">0</b> / <span id="final-total">60</span></p>
+                <p>Xếp loại: <b id="final-rank" style="color: #e65100">---</b></p>
+            </div>
+            
+            <button class="modal-btn" onclick="closeModal()">Xem lại bài</button>
+        </div>
+    </div>
+
+    <script>
+        const quizData = [
+    {
+        "q": "Phong says Duy looks ______ in his new school uniform.[cite: 1]",
+        "qVi": "Phong nói Duy trông ______ trong bộ đồng phục trường mới.",
+        "key": ["looks", "in his new school uniform"],
+        "opts": ["smart", "heavy", "large", "new"],
+        "optsVi": ["bảnh bao / sáng sủa", "nặng", "lớn", "mới"],
+        "correct": 0,
+        "exp": "Tính từ <b>smart</b> đi với trang phục mang nghĩa 'bảnh bao, gọn gàng, thanh lịch'.[cite: 1]<br><b>Kiến thức trọng tâm:</b> [Từ vựng - Tính từ miêu tả vẻ bề ngoài]"
+    },
+    {
+        "q": "Vy and I often ______ together after school in the library.[cite: 1]",
+        "qVi": "Vy và tôi thường ______ cùng nhau sau giờ học trong thư viện.",
+        "key": ["after school in the library"],
+        "opts": ["play football", "do our homework", "have lessons", "ride bicycles"],
+        "optsVi": ["chơi bóng đá", "làm bài tập về nhà", "có tiết học", "đạp xe"],
+        "correct": 1,
+        "exp": "Cụm từ <b>do homework</b> nghĩa là 'làm bài tập về nhà'. Thư viện là nơi thích hợp cho hoạt động này.[cite: 1]<br><b>Kiến thức trọng tâm:</b> [Từ vựng - Hoạt động học tập]"
+    },
+    {
+        "q": "Nick is very sporty. He ______ for the school team.[cite: 1]",
+        "qVi": "Nick rất yêu thể thao. Cậu ấy ______ cho đội của trường.",
+        "key": ["sporty", "school team"],
+        "opts": ["does exercise", "plays football", "studies science", "wears a uniform"],
+        "optsVi": ["tập thể dục", "chơi bóng đá", "học khoa học", "mặc đồng phục"],
+        "correct": 1,
+        "exp": "Từ 'sporty' (yêu thể thao) và 'school team' (đội tuyển trường) phù hợp nhất với cụm từ <b>plays football</b>.[cite: 1]<br><b>Kiến thức trọng tâm:</b> [Từ vựng - Hoạt động thể thao]"
+    },
+    {
+        "q": "To stay healthy, they ______ every day in the school playground.[cite: 1]",
+        "qVi": "Để giữ gìn sức khỏe, họ ______ mỗi ngày ở sân trường.",
+        "key": ["stay healthy", "playground"],
+        "opts": ["do exercise", "have lunch", "study new words", "play the piano"],
+        "optsVi": ["tập thể dục", "ăn trưa", "học từ mới", "chơi piano"],
+        "correct": 0,
+        "exp": "Cụm từ <b>do exercise</b> (tập thể dục) là hoạt động giúp giữ sức khỏe (stay healthy).[cite: 1]<br><b>Kiến thức trọng tâm:</b> [Từ vựng - Collocation]"
+    },
+    {
+        "q": "On Mondays, I ______ maths, English and science.[cite: 1]",
+        "qVi": "Vào các ngày thứ Hai, tôi ______ toán, tiếng Anh và khoa học.",
+        "key": ["maths, English and science"],
+        "opts": ["play", "do", "study", "wear"],
+        "optsVi": ["chơi", "làm", "học", "mặc"],
+        "correct": 2,
+        "exp": "Động từ <b>study</b> đi với các môn học mang nghĩa là 'học môn...'.[cite: 1]<br><b>Kiến thức trọng tâm:</b> [Từ vựng - Động từ đi với môn học]"
+    },
+    {
+        "q": "Duy's ______ looks very heavy because he has many new books.[cite: 1]",
+        "qVi": "Cái ______ của Duy trông rất nặng vì cậu ấy có nhiều sách mới.",
+        "key": ["heavy", "many new books"],
+        "opts": ["pencil case", "school bag", "notebook", "calculator"],
+        "optsVi": ["hộp bút", "cặp sách", "vở ghi", "máy tính"],
+        "correct": 1,
+        "exp": "'Nhiều sách mới' (many new books) thì phải được đựng trong <b>school bag</b> (cặp sách).[cite: 1]<br><b>Kiến thức trọng tâm:</b> [Từ vựng - Đồ dùng học tập]"
+    },
+    {
+        "q": "I need a ______ to draw a circle in my geometry class.[cite: 1]",
+        "qVi": "Tôi cần một chiếc ______ để vẽ một hình tròn trong lớp hình học của mình.",
+        "key": ["draw a circle", "geometry"],
+        "opts": ["rubber", "compass", "pencil sharpener", "ruler"],
+        "optsVi": ["cục tẩy", "com-pa", "gọt bút chì", "thước kẻ"],
+        "correct": 1,
+        "exp": "Từ vựng <b>compass</b> nghĩa là cái com-pa, dùng để 'vẽ hình tròn' (draw a circle).[cite: 1]<br><b>Kiến thức trọng tâm:</b> [Từ vựng - Đồ dùng học tập]"
+    },
+    {
+        "q": "Do you ______ with your classmates? Sharing is a good thing.[cite: 1]",
+        "qVi": "Bạn có ______ với bạn cùng lớp không? Chia sẻ là một điều tốt.",
+        "key": ["Sharing is a good thing"],
+        "opts": ["keep secret", "share things", "do judo", "look smart"],
+        "optsVi": ["giữ bí mật", "chia sẻ đồ đạc", "tập judo", "trông bảnh bao"],
+        "correct": 1,
+        "exp": "Câu sau nhắc đến 'Sharing' nên động từ phù hợp cho chỗ trống là <b>share things</b> (chia sẻ đồ đạc).[cite: 1]<br><b>Kiến thức trọng tâm:</b> [Từ vựng - Hoạt động học đường]"
+    },
+    {
+        "q": "Sunrise is a ______ in Sydney. Students study and live there.[cite: 1]",
+        "qVi": "Sunrise là một ______ ở Sydney. Học sinh học tập và sinh sống tại đó.",
+        "key": ["study and live there"],
+        "opts": ["primary school", "international school", "boarding school", "secondary school"],
+        "optsVi": ["trường tiểu học", "trường quốc tế", "trường nội trú", "trường trung học cơ sở"],
+        "correct": 2,
+        "exp": "Trường học mà học sinh vừa học vừa sống ở đó (study and live there) gọi là <b>boarding school</b> (trường nội trú).[cite: 1]<br><b>Kiến thức trọng tâm:</b> [Từ vựng - Các loại trường học]"
+    },
+    {
+        "q": "Students at Dream School learn English with ______ teachers.[cite: 1]",
+        "qVi": "Học sinh tại trường Dream học tiếng Anh với giáo viên ______.",
+        "key": ["learn English"],
+        "opts": ["Vietnamese-speaking", "English-speaking", "French-speaking", "Japanese-speaking"],
+        "optsVi": ["nói tiếng Việt", "nói tiếng Anh", "nói tiếng Pháp", "nói tiếng Nhật"],
+        "correct": 1,
+        "exp": "Học tiếng Anh (learn English) thì thường sẽ học với giáo viên <b>English-speaking</b> (giáo viên nói tiếng Anh / bản ngữ).[cite: 1]<br><b>Kiến thức trọng tâm:</b> [Từ vựng - Tính từ ghép]"
+    },
+    {
+        "q": "In the afternoon, students can ______ many interesting clubs.[cite: 1]",
+        "qVi": "Vào buổi chiều, học sinh có thể ______ nhiều câu lạc bộ thú vị.",
+        "key": ["clubs"],
+        "opts": ["join", "do", "play", "study"],
+        "optsVi": ["tham gia", "làm", "chơi", "học"],
+        "correct": 0,
+        "exp": "Động từ <b>join</b> mang nghĩa 'tham gia', thường đi kèm với 'clubs' (câu lạc bộ).[cite: 1]<br><b>Kiến thức trọng tâm:</b> [Từ vựng - Collocation]"
+    },
+    {
+        "q": "Some creative students ______ in the art club.[cite: 1]",
+        "qVi": "Một số học sinh sáng tạo ______ trong câu lạc bộ mỹ thuật.",
+        "key": ["creative", "art club"],
+        "opts": ["do paintings", "play football", "have lunch", "ride bicycles"],
+        "optsVi": ["vẽ tranh", "chơi bóng đá", "ăn trưa", "đạp xe"],
+        "correct": 0,
+        "exp": "Câu lạc bộ mỹ thuật (art club) là nơi phù hợp cho hoạt động <b>do paintings</b> (vẽ tranh).[cite: 1]<br><b>Kiến thức trọng tâm:</b> [Từ vựng - Hoạt động ngoại khóa]"
+    },
+    {
+        "q": "We often use a ______ to help with difficult calculations in Maths.[cite: 1]",
+        "qVi": "Chúng tôi thường sử dụng một chiếc ______ để hỗ trợ những phép tính khó trong môn Toán.",
+        "key": ["calculations in Maths"],
+        "opts": ["notebook", "dictionary", "calculator", "pencil case"],
+        "optsVi": ["vở ghi", "từ điển", "máy tính cầm tay", "hộp bút"],
+        "correct": 2,
+        "exp": "Để hỗ trợ các phép tính (calculations), công cụ phù hợp là <b>calculator</b> (máy tính cầm tay).[cite: 1]<br><b>Kiến thức trọng tâm:</b> [Từ vựng - Đồ dùng học tập]"
+    },
+    {
+        "q": "I have a red ______ to keep my pens and pencils organized.[cite: 1]",
+        "qVi": "Tôi có một chiếc ______ màu đỏ để giữ cho bút mực và bút chì được gọn gàng.",
+        "key": ["keep my pens and pencils organized"],
+        "opts": ["school bag", "pencil case", "compass", "rubber"],
+        "optsVi": ["cặp sách", "hộp bút", "com-pa", "cục tẩy"],
+        "correct": 1,
+        "exp": "Nơi dùng để cất gọn bút mực, bút chì gọi là <b>pencil case</b> (hộp bút).[cite: 1]<br><b>Kiến thức trọng tâm:</b> [Từ vựng - Đồ dùng học tập]"
+    },
+    {
+        "q": "At An Son School, there are mountains and green ______ around the school.[cite: 1]",
+        "qVi": "Tại trường An Sơn, có những ngọn núi và ______ xanh quanh trường.",
+        "key": ["mountains and green", "around"],
+        "opts": ["gardens", "fields", "playgrounds", "classrooms"],
+        "optsVi": ["khu vườn", "cánh đồng", "sân chơi", "phòng học"],
+        "correct": 1,
+        "exp": "Cụm từ <b>green fields</b> (những cánh đồng xanh) đi kèm với 'mountains' để miêu tả cảnh quan thiên nhiên quanh trường.[cite: 1]<br><b>Kiến thức trọng tâm:</b> [Từ vựng - Miêu tả cảnh quan]"
+    },
+    {
+        "q": "Hoang ______ breakfast at 6 o'clock before going to school.[cite: 1]",
+        "qVi": "Hoàng ______ bữa sáng lúc 6 giờ trước khi đến trường.",
+        "key": ["breakfast"],
+        "opts": ["does", "has", "plays", "studies"],
+        "optsVi": ["làm", "ăn", "chơi", "học"],
+        "correct": 1,
+        "exp": "Cụm từ cố định <b>have breakfast</b> nghĩa là 'ăn sáng'. Với chủ ngữ số ít (Hoang), dùng 'has'.[cite: 1]<br><b>Kiến thức trọng tâm:</b> [Từ vựng - Collocation]"
+    },
+    {
+        "q": "We usually ______ our bicycles to school every morning.[cite: 1]",
+        "qVi": "Chúng tôi thường ______ xe đạp đến trường mỗi sáng.",
+        "key": ["our bicycles"],
+        "opts": ["go", "ride", "drive", "walk"],
+        "optsVi": ["đi", "đạp/cưỡi", "lái (ô tô)", "đi bộ"],
+        "correct": 1,
+        "exp": "Động từ đi với phương tiện xe đạp là <b>ride</b> (ride a bicycle: đạp xe).[cite: 1]<br><b>Kiến thức trọng tâm:</b> [Từ vựng - Động từ đi lại]"
+    },
+    {
+        "q": "Do you ______ all your new classmates' names?[cite: 1]",
+        "qVi": "Bạn có ______ tất cả tên các bạn cùng lớp mới của bạn không?",
+        "key": ["names"],
+        "opts": ["remember", "listen", "share", "help"],
+        "optsVi": ["nhớ", "lắng nghe", "chia sẻ", "giúp đỡ"],
+        "correct": 0,
+        "exp": "Động từ <b>remember</b> (nhớ) phù hợp nhất với tân ngữ 'names' (tên).[cite: 1]<br><b>Kiến thức trọng tâm:</b> [Từ vựng - Động từ nhận thức]"
+    },
+    {
+        "q": "Students always ______ on Monday. It makes them look very neat.[cite: 1]",
+        "qVi": "Học sinh luôn ______ vào thứ Hai. Điều đó giúp họ trông rất gọn gàng.",
+        "key": ["look very neat"],
+        "opts": ["do homework", "wear their uniforms", "play badminton", "have school lunch"],
+        "optsVi": ["làm bài tập", "mặc đồng phục", "chơi cầu lông", "ăn trưa ở trường"],
+        "correct": 1,
+        "exp": "Hoạt động giúp học sinh trông gọn gàng, đồng bộ là <b>wear their uniforms</b> (mặc đồng phục).[cite: 1]<br><b>Kiến thức trọng tâm:</b> [Từ vựng - Hoạt động học đường]"
+    },
+    {
+        "q": "I go to the ______ twice a week to learn how to fight and defend.[cite: 1]",
+        "qVi": "Tôi đến ______ hai lần một tuần để học cách chiến đấu và tự vệ.",
+        "key": ["learn how to fight and defend"],
+        "opts": ["art club", "judo club", "music club", "English club"],
+        "optsVi": ["câu lạc bộ mỹ thuật", "câu lạc bộ judo", "câu lạc bộ âm nhạc", "câu lạc bộ tiếng Anh"],
+        "correct": 1,
+        "exp": "Nơi để học cách chiến đấu và tự vệ (fight and defend) là <b>judo club</b> (câu lạc bộ võ judo).[cite: 1]<br><b>Kiến thức trọng tâm:</b> [Từ vựng - Câu lạc bộ ngoại khóa]"
+    },
+    {
+        "q": "An Son is a lower ______ school in Bac Giang with only 8 classes.[cite: 1]",
+        "qVi": "An Sơn là một trường trung học ______ ở Bắc Giang với chỉ 8 lớp.",
+        "key": ["lower", "school"],
+        "opts": ["primary", "secondary", "international", "boarding"],
+        "optsVi": ["tiểu học", "cơ sở (ghép với lower thành THCS)", "quốc tế", "nội trú"],
+        "correct": 1,
+        "exp": "Cụm từ cố định <b>lower secondary school</b> mang nghĩa là trường trung học cơ sở (cấp 2).[cite: 1]<br><b>Kiến thức trọng tâm:</b> [Từ vựng - Cấp học]"
+    },
+    {
+        "q": "Our school has a ______ with many computers for our IT lessons.[cite: 1]",
+        "qVi": "Trường chúng tôi có một ______ với nhiều máy tính cho các tiết học Tin học.",
+        "key": ["many computers", "IT lessons"],
+        "opts": ["library", "computer room", "garden", "playground"],
+        "optsVi": ["thư viện", "phòng máy tính", "khu vườn", "sân chơi"],
+        "correct": 1,
+        "exp": "Nơi có 'many computers' (nhiều máy tính) để học Tin học là <b>computer room</b> (phòng máy tính).[cite: 1]<br><b>Kiến thức trọng tâm:</b> [Từ vựng - Cơ sở vật chất trường học]"
+    },
+    {
+        "q": "There is a large ______ where we play games during break time.[cite: 1]",
+        "qVi": "Có một ______ lớn nơi chúng tôi chơi các trò chơi trong giờ nghỉ giải lao.",
+        "key": ["play games during break time"],
+        "opts": ["school canteen", "playground", "computer room", "classroom"],
+        "optsVi": ["căng tin trường", "sân chơi", "phòng máy tính", "phòng học"],
+        "correct": 1,
+        "exp": "Nơi để vui chơi trong giờ giải lao (break time) là <b>playground</b> (sân chơi).[cite: 1]<br><b>Kiến thức trọng tâm:</b> [Từ vựng - Cơ sở vật chất trường học]"
+    },
+    {
+        "q": "My brother is very ______. He spends many hours studying every day.[cite: 1]",
+        "qVi": "Anh trai tôi rất ______. Anh ấy dành nhiều giờ để học mỗi ngày.",
+        "key": ["spends many hours studying"],
+        "opts": ["creative", "hard-working", "excited", "smart"],
+        "optsVi": ["sáng tạo", "chăm chỉ", "hào hứng", "thông minh"],
+        "correct": 1,
+        "exp": "Người dành nhiều thời gian để học (spends many hours studying) được miêu tả là <b>hard-working</b> (chăm chỉ).[cite: 1]<br><b>Kiến thức trọng tâm:</b> [Từ vựng - Tính từ miêu tả tính cách]"
+    },
+    {
+        "q": "At Dream School, students ______ sports and games in the afternoon.[cite: 1]",
+        "qVi": "Tại trường Dream, học sinh ______ các môn thể thao và trò chơi vào buổi chiều.",
+        "key": ["sports and games"],
+        "opts": ["do", "play", "have", "study"],
+        "optsVi": ["làm", "chơi", "có", "học"],
+        "correct": 1,
+        "exp": "Động từ đi với 'sports and games' thường là <b>play</b> (chơi thể thao và trò chơi).[cite: 1]<br><b>Kiến thức trọng tâm:</b> [Từ vựng - Collocation]"
+    },
+    {
+        "q": "Do you ______ when your classmates are talking in class?[cite: 1]",
+        "qVi": "Bạn có ______ khi các bạn cùng lớp đang nói chuyện trong lớp không?",
+        "key": ["when your classmates are talking"],
+        "opts": ["listen", "talk", "play", "share"],
+        "optsVi": ["lắng nghe", "nói chuyện", "chơi", "chia sẻ"],
+        "correct": 0,
+        "exp": "Ngữ cảnh hỏi về thái độ tập trung, 'khi bạn bè đang nói' thì hành động phù hợp là <b>listen</b> (lắng nghe).[cite: 1]<br><b>Kiến thức trọng tâm:</b> [Từ vựng - Động từ giao tiếp]"
+    },
+    {
+        "q": "\"Hi, Duy. ______ to meet you,\" said Phong.[cite: 1]",
+        "qVi": "\"Chào Duy. ______ được gặp cậu,\" Phong nói.",
+        "key": ["to meet you"],
+        "opts": ["Fine", "Nice", "Good", "Happy"],
+        "optsVi": ["Khỏe", "Tuyệt / Rất vui", "Tốt", "Hạnh phúc"],
+        "correct": 1,
+        "exp": "Cụm từ giao tiếp cơ bản khi chào hỏi là <b>Nice to meet you</b> (Rất vui được gặp bạn).[cite: 1]<br><b>Kiến thức trọng tâm:</b> [Từ vựng - Cụm từ giao tiếp]"
+    },
+    {
+        "q": "Janet's favorite teacher is her ______ teacher. She loves numbers.[cite: 1]",
+        "qVi": "Giáo viên yêu thích của Janet là giáo viên dạy môn ______ của cô ấy. Cô ấy yêu những con số.",
+        "key": ["loves numbers"],
+        "opts": ["science", "maths", "art", "history"],
+        "optsVi": ["khoa học", "toán học", "mỹ thuật", "lịch sử"],
+        "correct": 1,
+        "exp": "Liên quan đến những con số (numbers) là môn <b>maths</b> (Toán học).[cite: 1]<br><b>Kiến thức trọng tâm:</b> [Từ vựng - Môn học]"
+    },
+    {
+        "q": "Students at a boarding school only ______ at weekends.[cite: 1]",
+        "qVi": "Học sinh ở trường nội trú chỉ ______ vào cuối tuần.",
+        "key": ["boarding school", "only", "at weekends"],
+        "opts": ["go to school", "go home", "have lessons", "play sports"],
+        "optsVi": ["đi học", "về nhà", "có tiết học", "chơi thể thao"],
+        "correct": 1,
+        "exp": "Đặc thù của trường nội trú (boarding school) là học sinh ở lại trường và chỉ <b>go home</b> (về nhà) vào dịp cuối tuần.[cite: 1]<br><b>Kiến thức trọng tâm:</b> [Từ vựng - Hoạt động học đường]"
+    },
+    {
+        "q": "Can you ______ me your rubber for a minute? I made a mistake.[cite: 1]",
+        "qVi": "Bạn có thể ______ cho tôi cục tẩy của bạn một phút được không? Tôi vừa làm sai.",
+        "key": ["me your rubber for a minute"],
+        "opts": ["share", "lend", "give", "keep"],
+        "optsVi": ["chia sẻ", "cho mượn", "đưa cho", "giữ"],
+        "correct": 1,
+        "exp": "Cấu trúc <b>lend somebody something</b> (cho ai mượn cái gì). Mượn đồ dùng trong thời gian ngắn (for a minute) dùng từ 'lend'.[cite: 1]<br><b>Kiến thức trọng tâm:</b> [Từ vựng - Động từ giao tiếp]"
+    },
+    {
+        "q": "Janet usually ______ in the library to find a quiet space.[cite: 1]",
+        "qVi": "Janet thường ______ trong thư viện để tìm một không gian yên tĩnh.",
+        "key": ["in the library", "quiet space"],
+        "opts": ["plays football", "does her homework", "has lunch", "rides a bicycle"],
+        "optsVi": ["chơi bóng đá", "làm bài tập về nhà", "ăn trưa", "đạp xe"],
+        "correct": 1,
+        "exp": "Hoạt động phù hợp nhất để làm ở thư viện (nơi yên tĩnh) là <b>does her homework</b> (làm bài tập về nhà).[cite: 1]<br><b>Kiến thức trọng tâm:</b> [Từ vựng - Hoạt động học sinh]"
+    },
+    {
+        "q": "I use this ______ to write down all the new English words.[cite: 1]",
+        "qVi": "Tôi dùng chiếc ______ này để ghi lại tất cả các từ mới tiếng Anh.",
+        "key": ["write down"],
+        "opts": ["textbook", "notebook", "dictionary", "calculator"],
+        "optsVi": ["sách giáo khoa", "vở ghi", "từ điển", "máy tính"],
+        "correct": 1,
+        "exp": "Dụng cụ dùng để ghi chép (write down) là <b>notebook</b> (vở ghi chép).[cite: 1]<br><b>Kiến thức trọng tâm:</b> [Từ vựng - Đồ dùng học tập]"
+    },
+    {
+        "q": "Do you ______ your classmates with their difficult homework?[cite: 1]",
+        "qVi": "Bạn có ______ các bạn cùng lớp của mình với những bài tập khó không?",
+        "key": ["with their difficult homework"],
+        "opts": ["help", "share", "keep", "join"],
+        "optsVi": ["giúp đỡ", "chia sẻ", "giữ", "tham gia"],
+        "correct": 0,
+        "exp": "Cấu trúc <b>help somebody with something</b> (giúp đỡ ai đó việc gì).[cite: 1]<br><b>Kiến thức trọng tâm:</b> [Từ vựng - Collocation]"
+    },
+    {
+        "q": "You should ______ to your friends' advice when you have problems.[cite: 1]",
+        "qVi": "Bạn nên ______ lời khuyên của bạn bè khi bạn gặp vấn đề.",
+        "key": ["to your friends' advice"],
+        "opts": ["listen", "talk", "remember", "tell"],
+        "optsVi": ["lắng nghe", "nói chuyện", "ghi nhớ", "kể"],
+        "correct": 0,
+        "exp": "Cấu trúc <b>listen to</b> đi với 'advice' (lắng nghe lời khuyên).[cite: 1]<br><b>Kiến thức trọng tâm:</b> [Từ vựng - Động từ đi với giới từ]"
+    },
+    {
+        "q": "My favorite subject is ______ because I love learning about the past.[cite: 1]",
+        "qVi": "Môn học yêu thích của tôi là ______ vì tôi thích tìm hiểu về quá khứ.",
+        "key": ["learning about the past"],
+        "opts": ["geography", "history", "science", "art"],
+        "optsVi": ["địa lý", "lịch sử", "khoa học", "mỹ thuật"],
+        "correct": 1,
+        "exp": "Môn học nghiên cứu về quá khứ (the past) là môn <b>history</b> (lịch sử).[cite: 1]<br><b>Kiến thức trọng tâm:</b> [Từ vựng - Môn học]"
+    },
+    {
+        "q": "My sister likes to ______; she is very good at music.[cite: 1]",
+        "qVi": "Chị gái tôi thích ______; chị ấy rất giỏi âm nhạc.",
+        "key": ["good at music"],
+        "opts": ["do judo", "play the piano", "study science", "wear a uniform"],
+        "optsVi": ["tập judo", "chơi piano", "học khoa học", "mặc đồng phục"],
+        "correct": 1,
+        "exp": "Hoạt động liên quan đến âm nhạc (music) là <b>play the piano</b> (chơi piano).[cite: 1]<br><b>Kiến thức trọng tâm:</b> [Từ vựng - Hoạt động giải trí]"
+    },
+    {
+        "q": "We have ______ today: English, Maths, and Geography.[cite: 1]",
+        "qVi": "Hôm nay chúng tôi có ______: Tiếng Anh, Toán và Địa lý.",
+        "key": ["English, Maths, and Geography"],
+        "opts": ["3 activities", "3 subjects", "3 clubs", "3 things"],
+        "optsVi": ["3 hoạt động", "3 môn học", "3 câu lạc bộ", "3 thứ"],
+        "correct": 1,
+        "exp": "Tiếng Anh, Toán, Địa lý được gọi chung là <b>subjects</b> (môn học).[cite: 1]<br><b>Kiến thức trọng tâm:</b> [Từ vựng - Trường học]"
+    },
+    {
+        "q": "In Physics class, we often ______ many interesting experiments.[cite: 1]",
+        "qVi": "Trong lớp Vật lý, chúng tôi thường ______ nhiều thí nghiệm thú vị.",
+        "key": ["experiments"],
+        "opts": ["play", "do", "have", "wear"],
+        "optsVi": ["chơi", "làm", "có", "mặc"],
+        "correct": 1,
+        "exp": "Cụm từ cố định <b>do experiments</b> mang nghĩa là 'làm thí nghiệm'.[cite: 1]<br><b>Kiến thức trọng tâm:</b> [Từ vựng - Collocation]"
+    },
+    {
+        "q": "Every morning, I ______ at 6 o'clock to get ready for school.[cite: 1]",
+        "qVi": "Mỗi buổi sáng, tôi ______ lúc 6 giờ để chuẩn bị đi học.",
+        "key": ["at 6 o'clock to get ready"],
+        "opts": ["go to school", "get up", "have lessons", "play football"],
+        "optsVi": ["đi học", "thức dậy", "có tiết học", "chơi bóng đá"],
+        "correct": 1,
+        "exp": "Hoạt động để bắt đầu một ngày trước khi chuẩn bị đi học là <b>get up</b> (thức dậy).[cite: 1]<br><b>Kiến thức trọng tâm:</b> [Từ vựng - Hoạt động hàng ngày]"
+    },
+    {
+        "q": "Is there a school ______ at An Son school to grow vegetables?[cite: 1]",
+        "qVi": "Ở trường An Sơn có ______ của trường để trồng rau không?",
+        "key": ["grow vegetables"],
+        "opts": ["library", "garden", "playground", "computer room"],
+        "optsVi": ["thư viện", "khu vườn", "sân chơi", "phòng máy tính"],
+        "correct": 1,
+        "exp": "Nơi dùng để trồng rau (grow vegetables) là <b>garden</b> (khu vườn).[cite: 1]<br><b>Kiến thức trọng tâm:</b> [Từ vựng - Cơ sở vật chất trường học]"
+    }
+];
+
+        // Cấu hình bài thi
+        const QUIZ_PASSWORD = "9001"; // Thay đổi mật khẩu tại đây
+        const LESSON_NAME = "Unit 1"; // Đổi tên cho từng bài khác nhau
+        let currentUser = "";
+
+        let answeredSet = new Set();
+        let correctCount = 0;
+        const totalCount = quizData.length;
+
+        function checkLogin() {
+            const nameInput = document.getElementById('student-name').value.trim();
+            const passInput = document.getElementById('student-pass').value;
+            const errorMsg = document.getElementById('login-error');
+
+            if (nameInput === "" || passInput !== QUIZ_PASSWORD) {
+                errorMsg.style.display = "block";
+            } else {
+                currentUser = nameInput;
+                document.getElementById('login-overlay').style.display = "none";
+                document.querySelector('.header-title').innerText = `${LESSON_NAME} - ${currentUser}`;
+            }
+        }
+
+        function initQuiz() {
+            const container = document.getElementById('quiz-container');
+            const nav = document.getElementById('q-nav');
+            document.getElementById('stat-total').innerText = totalCount;
+            document.getElementById('final-total').innerText = totalCount;
+
+            quizData.forEach((item, index) => {
+                const displayIndex = index + 1; 
+                const card = document.createElement('div');
+                card.className = 'question-card';
+                card.id = `q-card-${index}`;
+                
+                card.innerHTML = `
+                    <div class="question-text">
+                        Question ${displayIndex}. ${item.q}
+                        <div class="trans-text" id="trans-q-${index}">${item.qVi}</div>
+                    </div>
+
+                    <button class="btn-hint-toggle" onclick="toggleHint(${index})">
+                        💡 Gợi ý (Keywords)
+                    </button>
+                    <div class="hint-content" id="hint-box-${index}">
+                        <strong>Keywords:</strong> ${item.key.join('; ')}
+                    </div>
+
+                    <div class="options-list">
+                        ${item.opts.map((opt, i) => `
+                            <button class="option-btn" onclick="checkAnswer(this, ${index}, ${i})">
+                                <span><b>${String.fromCharCode(65 + i)}.</b> ${opt}</span>
+                                <span class="trans-text" id="trans-opt-${index}-${i}">(${item.optsVi[i]})</span>
+                            </button>
+                        `).join('')}
+                    </div>
+                    
+                    <div class="explanation-box" id="exp-${index}"></div>
+
+                    <button class="btn-trans-toggle" id="btn-trans-${index}" onclick="toggleTrans(${index})" disabled title="Hãy chọn đáp án trước để xem dịch nghĩa">
+                        🔒 Dịch nghĩa
+                    </button>
+                `;
+                container.appendChild(card);
+
+                const qNum = document.createElement('div');
+                qNum.className = 'q-num';
+                qNum.id = `nav-${index}`;
+                qNum.innerText = displayIndex;
+                qNum.onclick = () => {
+                    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    if(window.innerWidth <= 768) toggleSidebar();
+                };
+                nav.appendChild(qNum);
+            });
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+
+        function toggleHint(index) {
+            document.getElementById(`hint-box-${index}`).classList.toggle('show');
+        }
+
+        function toggleTrans(index) {
+            const qTrans = document.getElementById(`trans-q-${index}`);
+            const btn = document.getElementById(`btn-trans-${index}`);
+            
+            qTrans.classList.toggle('show');
+            for (let i = 0; i < 4; i++) {
+                const optTrans = document.getElementById(`trans-opt-${index}-${i}`);
+                if(optTrans) optTrans.classList.toggle('show');
+            }
+            
+            if (qTrans.classList.contains('show')) {
+                btn.innerHTML = '🌐 Ẩn dịch nghĩa';
+                btn.style.backgroundColor = '#e8f0fe';
+                btn.style.color = '#1a73e8';
+            } else {
+                btn.innerHTML = '🌐 Dịch nghĩa';
+                btn.style.backgroundColor = '#f1f3f4';
+                btn.style.color = '#555';
+            }
+        }
+
+        function updateStats() {
+            document.getElementById('stat-correct').innerText = correctCount;
+            const score = (correctCount / totalCount * 10).toFixed(1);
+            document.getElementById('stat-score').innerText = score;
+        }
+
+        function checkAnswer(btn, qIndex, optIndex) {
+            if (answeredSet.has(qIndex)) return;
+            answeredSet.add(qIndex);
+
+            const buttons = btn.parentElement.querySelectorAll('.option-btn');
+            const correctIndex = quizData[qIndex].correct;
+            const expBox = document.getElementById(`exp-${qIndex}`);
+            const transBtn = document.getElementById(`btn-trans-${qIndex}`);
+            const navNum = document.getElementById(`nav-${qIndex}`);
+
+            if (transBtn.hasAttribute('disabled')) {
+                transBtn.removeAttribute('disabled');
+                transBtn.innerHTML = '🌐 Dịch nghĩa';
+            }
+
+            if (optIndex === correctIndex) {
+                btn.classList.add('correct');
+                navNum.classList.add('done-correct');
+                correctCount++;
+            } else {
+                btn.classList.add('wrong');
+                navNum.classList.add('done-wrong');
+                buttons[correctIndex].classList.add('correct');
+            }
+
+            updateStats();
+            buttons.forEach(b => b.classList.add('disabled'));
+            const percent = (answeredSet.size / quizData.length) * 100;
+            document.getElementById('progress-bar').style.width = percent + '%';
+
+            expBox.innerHTML = `<strong>Giải thích chi tiết:</strong> ${quizData[qIndex].exp}`;
+            expBox.style.display = 'block';
+        }
+
+        function submitQuiz() {
+            if (window.innerWidth <= 768) toggleSidebar();
+            if (answeredSet.size < totalCount) {
+                const confirmSubmit = confirm(`Bạn mới làm ${answeredSet.size}/${totalCount} câu. Bạn có chắc muốn nộp bài không?`);
+                if (!confirmSubmit) return;
+            }
+
+            const score = (correctCount / totalCount * 10).toFixed(1);
+            let rank = "";
+            if(score >= 9) rank = "Xuất sắc (Excellent)";
+            else if(score >= 8) rank = "Giỏi (Good)";
+            else if(score >= 6.5) rank = "Khá (Fair)";
+            else if(score >= 5) rank = "Trung bình (Average)";
+            else rank = "Cần cố gắng thêm (Poor)";
+
+            let wrongAnswers = [];
+            for (let i = 0; i < totalCount; i++) {
+                const navNum = document.getElementById(`nav-${i}`);
+                if (!navNum.classList.contains('done-correct')) {
+                    wrongAnswers.push(i + 1);
+                }
+            }
+            const wrongListString = wrongAnswers.length > 0 ? wrongAnswers.join(', ') : "Không sai câu nào";
+
+            const scriptURL = 'https://script.google.com/macros/s/AKfycbzjiTHdrvfoBKoacJ82YholKR2DfATpjp5Manr2Qu2O6-sh4PipGemq7rzrHnURMW6P/exec';
+            
+            const submitBtn = document.querySelector('.sidebar .btn-submit');
+            const originalText = submitBtn.innerText;
+            submitBtn.innerText = "Đang gửi kết quả...";
+            submitBtn.disabled = true;
+
+            fetch(scriptURL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: new URLSearchParams({
+                    'name': currentUser,
+                    'lesson': LESSON_NAME,
+                    'correct': correctCount,
+                    'score': score,
+                    'wrong_list': wrongListString
+                })
+            }).then(() => {
+                showResultModal(score, rank);
+                submitBtn.innerText = originalText;
+                submitBtn.disabled = false;
+            }).catch(error => {
+                console.error('Lỗi!', error);
+                alert('Đã lưu bài thi nhưng có lỗi mạng khi gửi kết quả.');
+                showResultModal(score, rank);
+                submitBtn.innerText = originalText;
+                submitBtn.disabled = false;
+            });
+        }
+
+        function showResultModal(score, rank) {
+            document.getElementById('final-score').innerText = score;
+            document.getElementById('final-correct').innerText = correctCount;
+            document.getElementById('final-rank').innerText = rank;
+            document.getElementById('result-modal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('result-modal').style.display = 'none';
+        }
+
+        window.onload = initQuiz;
+    </script>
+</body>
+</html>
