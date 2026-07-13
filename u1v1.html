@@ -101,9 +101,9 @@
 
         .btn-trans-toggle {
             margin-top: 20px; align-self: flex-start; background: #f1f3f4; border: none; padding: 8px 16px;
-            border-radius: 20px; font-size: 0.9em; color: #555; display: flex; align-items: center; gap: 6px; font-weight: 500;
+            border-radius: 20px; font-size: 0.9em; color: #555; display: flex; align-items: center; gap: 6px; font-weight: 500; cursor: pointer;
         }
-        .btn-trans-toggle:disabled { opacity: 0.5; background-color: #eee; }
+        .btn-trans-toggle:disabled { opacity: 0.5; background-color: #eee; cursor: not-allowed; }
         .trans-text { display: none; color: var(--trans-color); font-style: italic; font-size: 0.95em; margin-top: 5px; font-weight: normal; border-top: 1px dashed #eee; padding-top: 4px; }
         .trans-text.show { display: block; animation: fadeIn 0.3s; }
         .explanation-box { margin-top: 15px; padding: 15px; border-radius: 6px; background-color: #fffde7; border-left: 4px solid #fbc02d; display: none; font-size: 0.95em; }
@@ -183,7 +183,7 @@
             <div class="stats-box">
                 <div class="stat-item">
                     <span>Số câu đúng:</span>
-                    <span class="stat-value"><span id="stat-correct">0</span>/<span id="stat-total">60</span></span>
+                    <span class="stat-value"><span id="stat-correct">0</span>/<span id="stat-total">40</span></span>
                 </div>
                 <div class="stat-item">
                     <span>Điểm số:</span>
@@ -207,7 +207,7 @@
             <div class="modal-header-score">
                 <div>
                     <h2 style="margin: 0; color: #333;">Kết quả bài làm</h2>
-                    <p style="margin: 5px 0 0 0; color: #666;">Số câu đúng: <b id="final-correct">0</b>/<span id="final-total">60</span></p>
+                    <p style="margin: 5px 0 0 0; color: #666;">Số câu đúng: <b id="final-correct">0</b>/<span id="final-total">40</span></p>
                 </div>
                 <div class="modal-score" id="final-score">0.0</div>
             </div>
@@ -238,61 +238,57 @@
     </div>
 
     <script>
-        // Dữ liệu 60 câu hỏi có tích hợp tag để phân tích
+        // Dữ liệu câu hỏi (Gồm 40 câu có cấu trúc tag đầy đủ)
         const quizData = [
-  {"q": "I live in a ________. And you? - I live in a country house.", "qVi": "Tôi sống trong một ________. Còn bạn? - Tôi sống trong một ngôi nhà nông thôn.", "key": ["live in a", "country house"], "opts": ["town house", "cupboard", "sink", "fridge"], "optsVi": ["nhà phố", "tủ bếp", "bồn rửa", "tủ lạnh"], "correct": 0, "exp": "Town house là loại hình nhà ở, các đáp án còn lại là đồ dùng.", "tag": "house_types"},
-  {"q": "I live in a town house. Who do you live with? - I live in a ________.", "qVi": "Tôi sống trong một nhà phố. Bạn sống với ai? - Tôi sống trong một ________.", "key": ["live in a", "town house"], "opts": ["wardrobe", "country house", "dishwasher", "chopstick"], "optsVi": ["tủ quần áo", "nhà nông thôn", "máy rửa bát", "đũa"], "correct": 1, "exp": "Country house là loại hình nhà ở phù hợp để trả lời câu hỏi về nơi ở.", "tag": "house_types"},
-  {"q": "My parents and younger brother. We're moving to a ________ next month!", "qVi": "Bố mẹ và em trai tôi. Chúng tôi sẽ chuyển đến một ________ vào tháng tới!", "key": ["moving to a"], "opts": ["clock", "flat", "desk", "microwave"], "optsVi": ["đồng hồ", "căn hộ", "bàn học", "lò vi sóng"], "correct": 1, "exp": "Flat là loại nhà ở, các từ còn lại là đồ vật.", "tag": "house_types"},
-  {"q": "Are there many ________ in your new flat? - Yes, there are.", "qVi": "Có nhiều ________ trong căn hộ mới của bạn không? - Có, có nhiều.", "key": ["many", "in your new flat"], "opts": ["rooms", "beds", "sofas", "pillows"], "optsVi": ["căn phòng", "giường", "ghế sofa", "gối"], "correct": 0, "exp": "Câu hỏi hỏi về số lượng phòng trong nhà/căn hộ.", "tag": "room_types"},
-  {"q": "There's a living room, three ________, a kitchen and two bathrooms.", "qVi": "Có một phòng khách, ba ________, một nhà bếp và hai phòng tắm.", "key": ["living room", "kitchen", "bathrooms"], "opts": ["pillows", "bedrooms", "bowls", "chopsticks"], "optsVi": ["gối", "phòng ngủ", "bát", "đũa"], "correct": 1, "exp": "Đơn vị phòng trong nhà là phòng ngủ (bedrooms).", "tag": "room_types"},
-  {"q": "There's a living room, three bedrooms, a ________ and two bathrooms.", "qVi": "Có một phòng khách, ba phòng ngủ, một ________ và hai phòng tắm.", "key": ["living room", "bedrooms", "bathrooms"], "opts": ["kitchen", "picture", "lamp", "television"], "optsVi": ["nhà bếp", "bức tranh", "đèn", "ti vi"], "correct": 0, "exp": "Kitchen là một khu vực chức năng chính trong nhà.", "tag": "room_types"},
-  {"q": "My grandparents live in a ________ in Nam Dinh.", "qVi": "Ông bà tôi sống trong một ________ ở Nam Định.", "key": ["live in a"], "opts": ["country house", "shelf", "chest of drawers", "toilet"], "optsVi": ["nhà nông thôn", "kệ", "tủ ngăn kéo", "nhà vệ sinh"], "correct": 0, "exp": "Country house là kiểu nhà ở.", "tag": "house_types"},
-  {"q": "There are four ________ in the house and a big garden.", "qVi": "Có bốn cái ________ trong nhà và một khu vườn lớn.", "key": ["four", "in the house"], "opts": ["sinks", "rooms", "cookers", "fridges"], "optsVi": ["bồn rửa", "căn phòng", "bếp nấu", "tủ lạnh"], "correct": 1, "exp": "Rooms dùng để chỉ các không gian chức năng trong nhà.", "tag": "room_types"},
-  {"q": "I like the ________. There is a big window in this room.", "qVi": "Tôi thích ________. Có một cái cửa sổ lớn trong căn phòng này.", "key": ["big window", "in this room"], "opts": ["living room", "chopstick", "microwave", "dishwasher"], "optsVi": ["phòng khách", "đũa", "lò vi sóng", "máy rửa bát"], "correct": 0, "exp": "Phòng khách là một căn phòng, phù hợp mô tả có cửa sổ.", "tag": "room_types"},
-  {"q": "I'm in Da Lat with my parents. We're staying at the Crazy House Hotel. Wow! It really is ________.", "qVi": "Tôi đang ở Đà Lạt với bố mẹ. Chúng tôi ở khách sạn Crazy House. Chà! Nó thực sự rất ________.", "key": ["Crazy House Hotel"], "opts": ["messy", "crazy", "flat", "stilt house"], "optsVi": ["lộn xộn", "kỳ dị", "phẳng", "nhà sàn"], "correct": 1, "exp": "Kiến trúc độc đáo/kỳ dị của khách sạn Crazy House.", "tag": "house_types"},
-  {"q": "There are ten ________ in the hotel. There's a Kangaroo Room, an Eagle Room, and even an Ant Room.", "qVi": "Có mười ________ trong khách sạn. Có phòng Kangaroo, phòng Đại bàng và thậm chí là phòng Kiến.", "key": ["ten"], "opts": ["bowls", "rooms", "sofas", "cupboards"], "optsVi": ["bát", "phòng", "ghế sofa", "tủ"], "correct": 1, "exp": "Các không gian cho khách nghỉ lại gọi là phòng (rooms).", "tag": "room_types"},
-  {"q": "I'm staying in the Tiger ________. It's called the Tiger Room because there's a big tiger on the wall.", "qVi": "Tôi đang ở trong ________ Hổ. Nó gọi là phòng Hổ vì có con hổ lớn trên tường.", "key": ["Tiger Room"], "opts": ["Room", "Kitchen", "Attic", "Garage"], "optsVi": ["Phòng", "Nhà bếp", "Gác mái", "Gara"], "correct": 0, "exp": "Từ chỉ đơn vị phòng.", "tag": "room_types"},
-  {"q": "What's in your room? - A sofa and a television. Is it the ________? - Yes.", "qVi": "Có gì trong phòng bạn? - Một sofa và ti vi. Đó là ________ phải không? - Vâng.", "key": ["sofa", "television"], "opts": ["bathroom", "living room", "kitchen", "hall"], "optsVi": ["phòng tắm", "phòng khách", "nhà bếp", "hành lang"], "correct": 1, "exp": "Sofa và TV là nội thất phòng khách.", "tag": "room_types"},
-  {"q": "Look at the house. Name the rooms in it. There is a ________, a kitchen, a bedroom, a bathroom, and a living room.", "qVi": "Nhìn vào ngôi nhà. Hãy gọi tên các phòng. Có một ________, nhà bếp, phòng ngủ, phòng tắm, phòng khách.", "key": ["kitchen", "bedroom", "bathroom", "living room"], "opts": ["hall", "fridge", "lamp", "cooker"], "optsVi": ["hành lang", "tủ lạnh", "đèn", "bếp nấu"], "correct": 0, "exp": "Hall (sảnh/hành lang) là một không gian trong nhà.", "tag": "room_types"},
-  {"q": "Mum, are you home? - Yes, honey. I'm in the ________. I've bought these new bowls and chopsticks.", "qVi": "Mẹ ơi, mẹ có nhà không? - Có, con yêu. Mẹ đang ở trong ________. Mẹ mới mua bát đũa này.", "key": ["bowls", "chopsticks"], "opts": ["kitchen", "bedroom", "attic", "bathroom"], "optsVi": ["nhà bếp", "phòng ngủ", "gác mái", "phòng tắm"], "correct": 0, "exp": "Nhà bếp là nơi chứa bát đũa.", "tag": "room_types"},
-  {"q": "My grandfather likes the ________ the best. The kitchen is my grandfather's favourite room.", "qVi": "Ông tôi thích ________ nhất. Nhà bếp là phòng yêu thích của ông.", "key": ["favourite room", "kitchen"], "opts": ["kitchen", "pillow", "bed", "clock"], "optsVi": ["nhà bếp", "gối", "giường", "đồng hồ"], "correct": 0, "exp": "Câu hỏi lặp lại thông tin từ câu sau.", "tag": "room_types"},
-  {"q": "Mai's house has seven ________. The living room is next to the kitchen.", "qVi": "Nhà Mai có bảy ________. Phòng khách cạnh nhà bếp.", "key": ["living room", "kitchen"], "opts": ["tables", "desks", "rooms", "shelves"], "optsVi": ["bàn", "bàn học", "căn phòng", "kệ"], "correct": 2, "exp": "Tổng số lượng không gian trong nhà là phòng (rooms).", "tag": "room_types"},
-  {"q": "She often listens to music in her ________.", "qVi": "Cô ấy thường nghe nhạc trong ________.", "key": ["listen to music"], "opts": ["bedroom", "sink", "dishwasher", "cooker"], "optsVi": ["phòng ngủ", "bồn rửa", "máy rửa bát", "bếp nấu"], "correct": 0, "exp": "Phòng ngủ là nơi nghỉ ngơi, nghe nhạc.", "tag": "room_types"},
-  {"q": "Where do you live? - I live in a ________.", "qVi": "Bạn sống ở đâu? - Tôi sống trong một ________.", "key": ["live in a"], "opts": ["flat", "television", "cupboard", "chest of drawers"], "optsVi": ["căn hộ", "ti vi", "tủ bếp", "tủ ngăn kéo"], "correct": 0, "exp": "Flat là từ chỉ nơi ở.", "tag": "house_types"},
-  {"q": "This is the Shark Room. There's a table and a sofa in the middle of the ________.", "qVi": "Đây là phòng Cá mập. Có bàn và sofa ở giữa ________.", "key": ["middle", "sofa"], "opts": ["room", "picture", "clock", "lamp"], "optsVi": ["căn phòng", "bức tranh", "đồng hồ", "đèn"], "correct": 0, "exp": "Vị trí của nội thất nằm trong căn phòng (room).", "tag": "room_types"},
-  {"q": "My bedroom isn't nice. - How about putting a ________ on the wall?", "qVi": "Phòng ngủ không đẹp. - Sao không treo một ________ trên tường?", "key": ["on the wall"], "opts": ["picture", "cooker", "fridge", "sink"], "optsVi": ["bức tranh", "bếp", "tủ lạnh", "bồn rửa"], "correct": 0, "exp": "Tranh thường treo trên tường.", "tag": "furniture"},
-  {"q": "There's a lamp, a wardrobe and a ________. You should stay here when you visit Da Lat.", "qVi": "Có một cái đèn, một tủ quần áo và một ________. Bạn nên ở đây khi thăm Đà Lạt.", "key": ["lamp", "wardrobe"], "opts": ["desk", "bathroom", "kitchen", "hall"], "optsVi": ["bàn học", "phòng tắm", "nhà bếp", "hành lang"], "correct": 0, "exp": "Bàn học là đồ nội thất phòng ngủ.", "tag": "furniture"},
-  {"q": "I see. Is there a ________ behind you? - Yes, there is.", "qVi": "Tôi hiểu rồi. Có một cái ________ đằng sau bạn không? - Có.", "key": ["behind you"], "opts": ["TV", "town house", "villa", "country house"], "optsVi": ["Ti vi", "nhà phố", "biệt thự", "nhà nông thôn"], "correct": 0, "exp": "Ti vi là vật dụng.", "tag": "house_items"},
-  {"q": "There are four ________ and a table in the middle of the room.", "qVi": "Có bốn cái ________ và một cái bàn ở giữa phòng.", "key": ["table", "middle"], "opts": ["chairs", "kitchens", "flats", "villas"], "optsVi": ["ghế", "nhà bếp", "căn hộ", "biệt thự"], "correct": 0, "exp": "Ghế luôn đi cùng bàn.", "tag": "furniture"},
-  {"q": "I like the living room. There is a big ________ in this room.", "qVi": "Tôi thích phòng khách. Có một cái ________ lớn trong căn phòng này.", "key": ["living room", "big"], "opts": ["window", "chopstick", "microwave", "dishwasher"], "optsVi": ["cửa sổ", "đũa", "lò vi sóng", "máy rửa bát"], "correct": 0, "exp": "Cửa sổ là một phần của kiến trúc phòng.", "tag": "house_items"},
-  {"q": "There are two family ________ on the wall.", "qVi": "Có hai bức ________ gia đình trên tường.", "key": ["on the wall"], "opts": ["photos", "beds", "sinks", "fridges"], "optsVi": ["ảnh", "giường", "bồn rửa", "tủ lạnh"], "correct": 0, "exp": "Ảnh treo tường.", "tag": "house_items"},
-  {"q": "It's called the Tiger Room because there's a big tiger on the ________.", "qVi": "Nó gọi là phòng Hổ vì có con hổ lớn trên ________.", "key": ["on the"], "opts": ["wall", "floor", "garden", "attic"], "optsVi": ["tường", "sàn nhà", "khu vườn", "gác mái"], "correct": 0, "exp": "Tranh/hình trang trí thường nằm trên tường.", "tag": "spatial_relations"},
-  {"q": "Look at the picture. The cap is under the ________.", "qVi": "Nhìn vào bức tranh. Cái mũ ở dưới ________.", "key": ["under"], "opts": ["pillow", "kitchen", "flat", "villa"], "optsVi": ["gối", "nhà bếp", "căn hộ", "biệt thự"], "correct": 0, "exp": "Mũ đặt dưới gối.", "tag": "spatial_relations"},
-  {"q": "The bed is next to the window, but the ________ is a strange shape.", "qVi": "Giường cạnh cửa sổ, nhưng cái ________ hình thù kỳ lạ.", "key": ["bed", "window"], "opts": ["window", "sink", "cooker", "fridge"], "optsVi": ["cửa sổ", "bồn rửa", "bếp nấu", "tủ lạnh"], "correct": 0, "exp": "Cửa sổ được nhắc đến trong câu đầu, là đồ vật có hình dáng.", "tag": "house_items"},
-  {"q": "I put my bag under the ________.", "qVi": "Tôi để cặp dưới ________.", "key": ["under"], "opts": ["bed", "flat", "villa", "stilt house"], "optsVi": ["giường", "căn hộ", "biệt thự", "nhà sàn"], "correct": 0, "exp": "Vật đặt dưới gầm giường.", "tag": "spatial_relations"},
-  {"q": "There's a lamp, a ________ and a desk. You should stay here when you visit Da Lat.", "qVi": "Có đèn, một cái ________ và bàn học. Bạn nên ở đây khi đến Đà Lạt.", "key": ["lamp", "desk"], "opts": ["wardrobe", "kitchen", "bathroom", "hall"], "optsVi": ["tủ quần áo", "nhà bếp", "phòng tắm", "hành lang"], "correct": 0, "exp": "Tủ quần áo là nội thất phòng ngủ.", "tag": "furniture"},
-  {"q": "There are four chairs and a ________ in the middle of the room.", "qVi": "Có bốn ghế và một cái ________ ở giữa phòng.", "key": ["four chairs"], "opts": ["table", "bathroom", "hall", "kitchen"], "optsVi": ["bàn", "phòng tắm", "hành lang", "nhà bếp"], "correct": 0, "exp": "Bàn là trung tâm của bộ ghế.", "tag": "furniture"},
-  {"q": "What's in your room? - A ________ and a television.", "qVi": "Có gì trong phòng? - Một cái ________ và một cái ti vi.", "key": ["television"], "opts": ["sofa", "bathroom", "hall", "kitchen"], "optsVi": ["ghế sofa", "phòng tắm", "hành lang", "nhà bếp"], "correct": 0, "exp": "Sofa là đồ nội thất cùng loại với TV.", "tag": "furniture"},
-  {"q": "Mum, are you home? - Yes, honey. I've bought these new ________ and chopsticks.", "qVi": "Mẹ ơi, mẹ có nhà không? - Có, con yêu. Mẹ mua mấy cái ________ và đũa này.", "key": ["bowls and chopsticks"], "opts": ["bowls", "beds", "clocks", "pictures"], "optsVi": ["bát", "giường", "đồng hồ", "tranh"], "correct": 0, "exp": "Bát và đũa là cặp đồ dùng nhà bếp.", "tag": "house_items"},
-  {"q": "Mum, are you home? - Yes, honey. I've bought these new bowls and ________.", "qVi": "Mẹ ơi, mẹ có nhà không? - Có, con yêu. Mẹ mua mấy cái bát và ________ này.", "key": ["bowls"], "opts": ["chopsticks", "wardrobes", "cupboards", "sofas"], "optsVi": ["đũa", "tủ quần áo", "tủ bếp", "ghế sofa"], "correct": 0, "exp": "Đũa đi kèm với bát.", "tag": "house_items"},
-  {"q": "Don't forget we need two ________ for my bedroom, Mum.", "qVi": "Đừng quên chúng ta cần hai cái ________ cho phòng ngủ, mẹ ơi.", "key": ["bedroom"], "opts": ["lamps", "cookers", "fridges", "sinks"], "optsVi": ["đèn", "bếp nấu", "tủ lạnh", "bồn rửa"], "correct": 0, "exp": "Đèn bàn (lamps) dùng trong phòng ngủ.", "tag": "furniture"},
-  {"q": "Elena has a big ________ in her bedroom.", "qVi": "Elena có một cái ________ lớn trong phòng ngủ.", "key": ["bedroom"], "opts": ["bookshelf", "dishwasher", "microwave", "air conditioner"], "optsVi": ["kệ sách", "máy rửa bát", "lò vi sóng", "điều hòa"], "correct": 0, "exp": "Kệ sách là vật dụng phòng ngủ.", "tag": "furniture"},
-  {"q": "There's a big ________ next to the door.", "qVi": "Có một cái ________ lớn cạnh cửa ra vào.", "key": ["next to the door"], "opts": ["bed", "kitchen", "bathroom", "hall"], "optsVi": ["giường", "nhà bếp", "phòng tắm", "hành lang"], "correct": 0, "exp": "Giường là đồ nội thất phòng.", "tag": "furniture"},
-  {"q": "In her bedroom, there's a ________ on the wall.", "qVi": "Trong phòng ngủ, có một cái ________ trên tường.", "key": ["on the wall"], "opts": ["clock", "sofa", "desk", "table"], "optsVi": ["đồng hồ", "ghế sofa", "bàn học", "bàn"], "correct": 0, "exp": "Đồng hồ treo tường.", "tag": "furniture"},
-  {"q": "This is the Shark Room. There's a big shark at the ________.", "qVi": "Đây là phòng Cá mập. Có một con cá mập lớn ở ________.", "key": ["at the"], "opts": ["door", "pillow", "chopstick", "bowl"], "optsVi": ["cửa ra vào", "gối", "đũa", "bát"], "correct": 0, "exp": "Vị trí đặt hình trang trí lớn.", "tag": "spatial_relations"}
-];
+            {"q": "I live in a ________. And you? - I live in a country house.", "qVi": "Tôi sống trong một ________. Còn bạn? - Tôi sống trong một ngôi nhà nông thôn.", "key": ["live in a", "country house"], "opts": ["town house", "cupboard", "sink", "fridge"], "optsVi": ["nhà phố", "tủ bếp", "bồn rửa", "tủ lạnh"], "correct": 0, "exp": "Town house là loại hình nhà ở, các đáp án còn lại là đồ dùng.", "tag": "house_types"},
+            {"q": "I live in a town house. Who do you live with? - I live in a ________.", "qVi": "Tôi sống trong một nhà phố. Bạn sống với ai? - Tôi sống trong một ________.", "key": ["live in a", "town house"], "opts": ["wardrobe", "country house", "dishwasher", "chopstick"], "optsVi": ["tủ quần áo", "nhà nông thôn", "máy rửa bát", "đũa"], "correct": 1, "exp": "Country house là loại hình nhà ở phù hợp để trả lời câu hỏi về nơi ở.", "tag": "house_types"},
+            {"q": "My parents and younger brother. We're moving to a ________ next month!", "qVi": "Bố mẹ và em trai tôi. Chúng tôi sẽ chuyển đến một ________ vào tháng tới!", "key": ["moving to a"], "opts": ["clock", "flat", "desk", "microwave"], "optsVi": ["đồng hồ", "căn hộ", "bàn học", "lò vi sóng"], "correct": 1, "exp": "Flat là loại nhà ở, các từ còn lại là đồ vật.", "tag": "house_types"},
+            {"q": "Are there many ________ in your new flat? - Yes, there are.", "qVi": "Có nhiều ________ trong căn hộ mới của bạn không? - Có, có nhiều.", "key": ["many", "in your new flat"], "opts": ["rooms", "beds", "sofas", "pillows"], "optsVi": ["căn phòng", "giường", "ghế sofa", "gối"], "correct": 0, "exp": "Câu hỏi hỏi về số lượng phòng trong nhà/căn hộ.", "tag": "room_types"},
+            {"q": "There's a living room, three ________, a kitchen and two bathrooms.", "qVi": "Có một phòng khách, ba ________, một nhà bếp và hai phòng tắm.", "key": ["living room", "kitchen", "bathrooms"], "opts": ["pillows", "bedrooms", "bowls", "chopsticks"], "optsVi": ["gối", "phòng ngủ", "bát", "đũa"], "correct": 1, "exp": "Đơn vị phòng trong nhà là phòng ngủ (bedrooms).", "tag": "room_types"},
+            {"q": "There's a living room, three bedrooms, a ________ and two bathrooms.", "qVi": "Có một phòng khách, ba phòng ngủ, một ________ và hai phòng tắm.", "key": ["living room", "bedrooms", "bathrooms"], "opts": ["kitchen", "picture", "lamp", "television"], "optsVi": ["nhà bếp", "bức tranh", "đèn", "ti vi"], "correct": 0, "exp": "Kitchen là một khu vực chức năng chính trong nhà.", "tag": "room_types"},
+            {"q": "My grandparents live in a ________ in Nam Dinh.", "qVi": "Ông bà tôi sống trong một ________ ở Nam Định.", "key": ["live in a"], "opts": ["country house", "shelf", "chest of drawers", "toilet"], "optsVi": ["nhà nông thôn", "kệ", "tủ ngăn kéo", "nhà vệ sinh"], "correct": 0, "exp": "Country house là kiểu nhà ở.", "tag": "house_types"},
+            {"q": "There are four ________ in the house and a big garden.", "qVi": "Có bốn cái ________ trong nhà và một khu vườn lớn.", "key": ["four", "in the house"], "opts": ["sinks", "rooms", "cookers", "fridges"], "optsVi": ["bồn rửa", "căn phòng", "bếp nấu", "tủ lạnh"], "correct": 1, "exp": "Rooms dùng để chỉ các không gian chức năng trong nhà.", "tag": "room_types"},
+            {"q": "I like the ________. There is a big window in this room.", "qVi": "Tôi thích ________. Có một cái cửa sổ lớn trong căn phòng này.", "key": ["big window", "in this room"], "opts": ["living room", "chopstick", "microwave", "dishwasher"], "optsVi": ["phòng khách", "đũa", "lò vi sóng", "máy rửa bát"], "correct": 0, "exp": "Phòng khách là một căn phòng, phù hợp mô tả có cửa sổ.", "tag": "room_types"},
+            {"q": "I'm in Da Lat with my parents. We're staying at the Crazy House Hotel. Wow! It really is ________.", "qVi": "Tôi đang ở Đà Lạt với bố mẹ. Chúng tôi ở khách sạn Crazy House. Chà! Nó thực sự rất ________.", "key": ["Crazy House Hotel"], "opts": ["messy", "crazy", "flat", "stilt house"], "optsVi": ["lộn xộn", "kỳ dị", "phẳng", "nhà sàn"], "correct": 1, "exp": "Kiến trúc độc đáo/kỳ dị của khách sạn Crazy House.", "tag": "house_types"},
+            {"q": "There are ten ________ in the hotel. There's a Kangaroo Room, an Eagle Room, and even an Ant Room.", "qVi": "Có mười ________ trong khách sạn. Có phòng Kangaroo, phòng Đại bàng và thậm chí là phòng Kiến.", "key": ["ten"], "opts": ["bowls", "rooms", "sofas", "cupboards"], "optsVi": ["bát", "phòng", "ghế sofa", "tủ"], "correct": 1, "exp": "Các không gian cho khách nghỉ lại gọi là phòng (rooms).", "tag": "room_types"},
+            {"q": "I'm staying in the Tiger ________. It's called the Tiger Room because there's a big tiger on the wall.", "qVi": "Tôi đang ở trong ________ Hổ. Nó gọi là phòng Hổ vì có con hổ lớn trên tường.", "key": ["Tiger Room"], "opts": ["Room", "Kitchen", "Attic", "Garage"], "optsVi": ["Phòng", "Nhà bếp", "Gác mái", "Gara"], "correct": 0, "exp": "Từ chỉ đơn vị phòng.", "tag": "room_types"},
+            {"q": "What's in your room? - A sofa and a television. Is it the ________? - Yes.", "qVi": "Có gì trong phòng bạn? - Một sofa và ti vi. Đó là ________ phải không? - Vâng.", "key": ["sofa", "television"], "opts": ["bathroom", "living room", "kitchen", "hall"], "optsVi": ["phòng tắm", "phòng khách", "nhà bếp", "hành lang"], "correct": 1, "exp": "Sofa và TV là nội thất phòng khách.", "tag": "room_types"},
+            {"q": "Look at the house. Name the rooms in it. There is a ________, a kitchen, a bedroom, a bathroom, and a living room.", "qVi": "Nhìn vào ngôi nhà. Hãy gọi tên các phòng. Có một ________, nhà bếp, phòng ngủ, phòng tắm, phòng khách.", "key": ["kitchen", "bedroom", "bathroom", "living room"], "opts": ["hall", "fridge", "lamp", "cooker"], "optsVi": ["hành lang", "tủ lạnh", "đèn", "bếp nấu"], "correct": 0, "exp": "Hall (sảnh/hành lang) là một không gian trong nhà.", "tag": "room_types"},
+            {"q": "Mum, are you home? - Yes, honey. I'm in the ________. I've bought these new bowls and chopsticks.", "qVi": "Mẹ ơi, mẹ có nhà không? - Có, con yêu. Mẹ đang ở trong ________. Mẹ mới mua bát đũa này.", "key": ["bowls", "chopsticks"], "opts": ["kitchen", "bedroom", "attic", "bathroom"], "optsVi": ["nhà bếp", "phòng ngủ", "gác mái", "phòng tắm"], "correct": 0, "exp": "Nhà bếp là nơi chứa bát đũa.", "tag": "room_types"},
+            {"q": "My grandfather likes the ________ the best. The kitchen is my grandfather's favourite room.", "qVi": "Ông tôi thích ________ nhất. Nhà bếp là phòng yêu thích của ông.", "key": ["favourite room", "kitchen"], "opts": ["kitchen", "pillow", "bed", "clock"], "optsVi": ["nhà bếp", "gối", "giường", "đồng hồ"], "correct": 0, "exp": "Câu hỏi lặp lại thông tin từ câu sau.", "tag": "room_types"},
+            {"q": "Mai's house has seven ________. The living room is next to the kitchen.", "qVi": "Nhà Mai có bảy ________. Phòng khách cạnh nhà bếp.", "key": ["living room", "kitchen"], "opts": ["tables", "desks", "rooms", "shelves"], "optsVi": ["bàn", "bàn học", "căn phòng", "kệ"], "correct": 2, "exp": "Tổng số lượng không gian trong nhà là phòng (rooms).", "tag": "room_types"},
+            {"q": "She often listens to music in her ________.", "qVi": "Cô ấy thường nghe nhạc trong ________.", "key": ["listen to music"], "opts": ["bedroom", "sink", "dishwasher", "cooker"], "optsVi": ["phòng ngủ", "bồn rửa", "máy rửa bát", "bếp nấu"], "correct": 0, "exp": "Phòng ngủ là nơi nghỉ ngơi, nghe nhạc.", "tag": "room_types"},
+            {"q": "Where do you live? - I live in a ________.", "qVi": "Bạn sống ở đâu? - Tôi sống trong một ________.", "key": ["live in a"], "opts": ["flat", "television", "cupboard", "chest of drawers"], "optsVi": ["căn hộ", "ti vi", "tủ bếp", "tủ ngăn kéo"], "correct": 0, "exp": "Flat là từ chỉ nơi ở.", "tag": "house_types"},
+            {"q": "This is the Shark Room. There's a table and a sofa in the middle of the ________.", "qVi": "Đây là phòng Cá mập. Có bàn và sofa ở giữa ________.", "key": ["middle", "sofa"], "opts": ["room", "picture", "clock", "lamp"], "optsVi": ["căn phòng", "bức tranh", "đồng hồ", "đèn"], "correct": 0, "exp": "Vị trí của nội thất nằm trong căn phòng (room).", "tag": "room_types"},
+            {"q": "My bedroom isn't nice. - How about putting a ________ on the wall?", "qVi": "Phòng ngủ không đẹp. - Sao không treo một ________ trên tường?", "key": ["on the wall"], "opts": ["picture", "cooker", "fridge", "sink"], "optsVi": ["bức tranh", "bếp", "tủ lạnh", "bồn rửa"], "correct": 0, "exp": "Tranh thường treo trên tường.", "tag": "furniture"},
+            {"q": "There's a lamp, a wardrobe and a ________. You should stay here when you visit Da Lat.", "qVi": "Có một cái đèn, một tủ quần áo và một ________. Bạn nên ở đây khi thăm Đà Lạt.", "key": ["lamp", "wardrobe"], "opts": ["desk", "bathroom", "kitchen", "hall"], "optsVi": ["bàn học", "phòng tắm", "nhà bếp", "hành lang"], "correct": 0, "exp": "Bàn học là đồ nội thất phòng ngủ.", "tag": "furniture"},
+            {"q": "I see. Is there a ________ behind you? - Yes, there is.", "qVi": "Tôi hiểu rồi. Có một cái ________ đằng sau bạn không? - Có.", "key": ["behind you"], "opts": ["TV", "town house", "villa", "country house"], "optsVi": ["Ti vi", "nhà phố", "biệt thự", "nhà nông thôn"], "correct": 0, "exp": "Ti vi là vật dụng.", "tag": "house_items"},
+            {"q": "There are four ________ and a table in the middle of the room.", "qVi": "Có bốn cái ________ và một cái bàn ở giữa phòng.", "key": ["table", "middle"], "opts": ["chairs", "kitchens", "flats", "villas"], "optsVi": ["ghế", "nhà bếp", "căn hộ", "biệt thự"], "correct": 0, "exp": "Ghế luôn đi cùng bàn.", "tag": "furniture"},
+            {"q": "I like the living room. There is a big ________ in this room.", "qVi": "Tôi thích phòng khách. Có một cái ________ lớn trong căn phòng này.", "key": ["living room", "big"], "opts": ["window", "chopstick", "microwave", "dishwasher"], "optsVi": ["cửa sổ", "đũa", "lò vi sóng", "máy rửa bát"], "correct": 0, "exp": "Cửa sổ là một phần của kiến trúc phòng.", "tag": "house_items"},
+            {"q": "There are two family ________ on the wall.", "qVi": "Có hai bức ________ gia đình trên tường.", "key": ["on the wall"], "opts": ["photos", "beds", "sinks", "fridges"], "optsVi": ["ảnh", "giường", "bồn rửa", "tủ lạnh"], "correct": 0, "exp": "Ảnh treo tường.", "tag": "house_items"},
+            {"q": "It's called the Tiger Room because there's a big tiger on the ________.", "qVi": "Nó gọi là phòng Hổ vì có con hổ lớn trên ________.", "key": ["on the"], "opts": ["wall", "floor", "garden", "attic"], "optsVi": ["tường", "sàn nhà", "khu vườn", "gác mái"], "correct": 0, "exp": "Tranh/hình trang trí thường nằm trên tường.", "tag": "spatial_relations"},
+            {"q": "Look at the picture. The cap is under the ________.", "qVi": "Nhìn vào bức tranh. Cái mũ ở dưới ________.", "key": ["under"], "opts": ["pillow", "kitchen", "flat", "villa"], "optsVi": ["gối", "nhà bếp", "căn hộ", "biệt thự"], "correct": 0, "exp": "Mũ đặt dưới gối.", "tag": "spatial_relations"},
+            {"q": "The bed is next to the window, but the ________ is a strange shape.", "qVi": "Giường cạnh cửa sổ, nhưng cái ________ hình thù kỳ lạ.", "key": ["bed", "window"], "opts": ["window", "sink", "cooker", "fridge"], "optsVi": ["cửa sổ", "bồn rửa", "bếp nấu", "tủ lạnh"], "correct": 0, "exp": "Cửa sổ được nhắc đến trong câu đầu, là đồ vật có hình dáng.", "tag": "house_items"},
+            {"q": "I put my bag under the ________.", "qVi": "Tôi để cặp dưới ________.", "key": ["under"], "opts": ["bed", "flat", "villa", "stilt house"], "optsVi": ["giường", "căn hộ", "biệt thự", "nhà sàn"], "correct": 0, "exp": "Vật đặt dưới gầm giường.", "tag": "spatial_relations"},
+            {"q": "There's a lamp, a ________ and a desk. You should stay here when you visit Da Lat.", "qVi": "Có đèn, một cái ________ và bàn học. Bạn nên ở đây khi đến Đà Lạt.", "key": ["lamp", "desk"], "opts": ["wardrobe", "kitchen", "bathroom", "hall"], "optsVi": ["tủ quần áo", "nhà bếp", "phòng tắm", "hành lang"], "correct": 0, "exp": "Tủ quần áo là nội thất phòng ngủ.", "tag": "furniture"},
+            {"q": "There are four chairs and a ________ in the middle of the room.", "qVi": "Có bốn ghế và một cái ________ ở giữa phòng.", "key": ["four chairs"], "opts": ["table", "bathroom", "hall", "kitchen"], "optsVi": ["bàn", "phòng tắm", "hành lang", "nhà bếp"], "correct": 0, "exp": "Bàn là trung tâm của bộ ghế.", "tag": "furniture"},
+            {"q": "What's in your room? - A ________ and a television.", "qVi": "Có gì trong phòng? - Một cái ________ và một cái ti vi.", "key": ["television"], "opts": ["sofa", "bathroom", "hall", "kitchen"], "optsVi": ["ghế sofa", "phòng tắm", "hành lang", "nhà bếp"], "correct": 0, "exp": "Sofa là đồ nội thất cùng loại với TV.", "tag": "furniture"},
+            {"q": "Mum, are you home? - Yes, honey. I've bought these new ________ and chopsticks.", "qVi": "Mẹ ơi, mẹ có nhà không? - Có, con yêu. Mẹ mua mấy cái ________ và đũa này.", "key": ["bowls and chopsticks"], "opts": ["bowls", "beds", "clocks", "pictures"], "optsVi": ["bát", "giường", "đồng hồ", "tranh"], "correct": 0, "exp": "Bát và đũa là cặp đồ dùng nhà bếp.", "tag": "house_items"},
+            {"q": "Mum, are you home? - Yes, honey. I've bought these new bowls and ________.", "qVi": "Mẹ ơi, mẹ có nhà không? - Có, con yêu. Mẹ mua mấy cái bát và ________ này.", "key": ["bowls"], "opts": ["chopsticks", "wardrobes", "cupboards", "sofas"], "optsVi": ["đũa", "tủ quần áo", "tủ bếp", "ghế sofa"], "correct": 0, "exp": "Đũa đi kèm với bát.", "tag": "house_items"},
+            {"q": "Don't forget we need two ________ for my bedroom, Mum.", "qVi": "Đừng quên chúng ta cần hai cái ________ cho phòng ngủ, mẹ ơi.", "key": ["bedroom"], "opts": ["lamps", "cookers", "fridges", "sinks"], "optsVi": ["đèn", "bếp nấu", "tủ lạnh", "bồn rửa"], "correct": 0, "exp": "Đèn bàn (lamps) dùng trong phòng ngủ.", "tag": "furniture"},
+            {"q": "Elena has a big ________ in her bedroom.", "qVi": "Elena có một cái ________ lớn trong phòng ngủ.", "key": ["bedroom"], "opts": ["bookshelf", "dishwasher", "microwave", "air conditioner"], "optsVi": ["kệ sách", "máy rửa bát", "lò vi sóng", "điều hòa"], "correct": 0, "exp": "Kệ sách là vật dụng phòng ngủ.", "tag": "furniture"},
+            {"q": "There's a big ________ next to the door.", "qVi": "Có một cái ________ lớn cạnh cửa ra vào.", "key": ["next to the door"], "opts": ["bed", "kitchen", "bathroom", "hall"], "optsVi": ["giường", "nhà bếp", "phòng tắm", "hành lang"], "correct": 0, "exp": "Giường là đồ nội thất phòng.", "tag": "furniture"},
+            {"q": "In her bedroom, there's a ________ on the wall.", "qVi": "Trong phòng ngủ, có một cái ________ trên tường.", "key": ["on the wall"], "opts": ["clock", "sofa", "desk", "table"], "optsVi": ["đồng hồ", "ghế sofa", "bàn học", "bàn"], "correct": 0, "exp": "Đồng hồ treo tường.", "tag": "furniture"},
+            {"q": "This is the Shark Room. There's a big shark at the ________.", "qVi": "Đây là phòng Cá mập. Có một con cá mập lớn ở ________.", "key": ["at the"], "opts": ["door", "pillow", "chopstick", "bowl"], "optsVi": ["cửa ra vào", "gối", "đũa", "bát"], "correct": 0, "exp": "Vị trí đặt hình trang trí lớn.", "tag": "spatial_relations"}
+        ];
 
-        // Cấu hình bài thi
         const QUIZ_PASSWORD = "6002";
-        const LESSON_NAME = "Unit 2: My House";
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyOqwwh5ZEWXAyapckL0ZeGuf-mZDjudlUNsaFmoTCc2RTfGQ5fi-OtHKQlllVe8iAYyQ/exec'; // Link Google Apps Script
+        const LESSON_NAME = "Unit 4: Vocabulary Exercise";
 
         let currentUser = "";
         let currentClass = "";
-
-        let answeredSet = new Set();
-        let correctCount = 0;
-        const totalCount = quizData.length;
+        let userAnswers = new Array(quizData.length).fill(null);
+        let scorePerQuestion = 10 / quizData.length;
 
         function checkLogin() {
             const nameInput = document.getElementById('student-name').value.trim();
@@ -307,14 +303,16 @@
                 currentClass = classInput;
                 document.getElementById('login-overlay').style.display = "none";
                 document.querySelector('.header-title').innerText = `${LESSON_NAME} - ${currentUser} (${currentClass})`;
+                initQuiz();
             }
         }
 
         function initQuiz() {
             const container = document.getElementById('quiz-container');
             const nav = document.getElementById('q-nav');
-            document.getElementById('stat-total').innerText = totalCount;
-            document.getElementById('final-total').innerText = totalCount;
+            
+            document.getElementById('stat-total').innerText = quizData.length;
+            document.getElementById('final-total').innerText = quizData.length;
 
             quizData.forEach((item, index) => {
                 const displayIndex = index + 1; 
@@ -337,14 +335,14 @@
 
                     <div class="options-list">
                         ${item.opts.map((opt, i) => `
-                            <button class="option-btn" onclick="checkAnswer(this, ${index}, ${i})">
+                            <button class="option-btn" data-q="${index}" data-o="${i}" onclick="selectOption(this, ${index}, ${i})">
                                 <span><b>${String.fromCharCode(65 + i)}.</b> ${opt}</span>
                                 <span class="trans-text" id="trans-opt-${index}-${i}">(${item.optsVi[i]})</span>
                             </button>
                         `).join('')}
                     </div>
                     
-                    <div class="explanation-box" id="exp-${index}"></div>
+                    <div class="explanation-box" id="exp-${index}">${item.exp}</div>
 
                     <button class="btn-trans-toggle" id="btn-trans-${index}" onclick="toggleTrans(${index})" disabled title="Hãy chọn đáp án trước để xem dịch nghĩa">
                         🔒 Dịch nghĩa
@@ -352,208 +350,165 @@
                 `;
                 container.appendChild(card);
 
+                // Thêm vào thanh điều hướng bên cạnh
                 const qNum = document.createElement('div');
                 qNum.className = 'q-num';
                 qNum.id = `nav-${index}`;
                 qNum.innerText = displayIndex;
                 qNum.onclick = () => {
-                    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    document.getElementById(`q-card-${index}`).scrollIntoView({ behavior: 'smooth', block: 'center' });
                     if(window.innerWidth <= 768) toggleSidebar();
                 };
                 nav.appendChild(qNum);
             });
         }
 
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('sidebar-overlay');
-            sidebar.classList.toggle('active');
-            overlay.classList.toggle('active');
-        }
-
         function toggleHint(index) {
-            document.getElementById(`hint-box-${index}`).classList.toggle('show');
+            const hintBox = document.getElementById(`hint-box-${index}`);
+            hintBox.classList.toggle('show');
         }
 
         function toggleTrans(index) {
-            const qTrans = document.getElementById(`trans-q-${index}`);
-            const btn = document.getElementById(`btn-trans-${index}`);
-            
-            qTrans.classList.toggle('show');
-            for (let i = 0; i < 4; i++) {
-                const optTrans = document.getElementById(`trans-opt-${index}-${i}`);
-                if(optTrans) optTrans.classList.toggle('show');
-            }
-            
-            if (qTrans.classList.contains('show')) {
-                btn.innerHTML = '🌐 Ẩn dịch nghĩa';
-                btn.style.backgroundColor = '#e8f0fe';
-                btn.style.color = '#1a73e8';
-            } else {
-                btn.innerHTML = '🌐 Dịch nghĩa';
-                btn.style.backgroundColor = '#f1f3f4';
-                btn.style.color = '#555';
-            }
+            const elements = [
+                document.getElementById(`trans-q-${index}`),
+                document.getElementById(`trans-opt-${index}-0`),
+                document.getElementById(`trans-opt-${index}-1`),
+                document.getElementById(`trans-opt-${index}-2`),
+                document.getElementById(`trans-opt-${index}-3`)
+            ];
+            elements.forEach(el => { if(el) el.classList.toggle('show'); });
         }
 
-        function updateStats() {
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.getElementById('sidebar-overlay').classList.toggle('active');
+        }
+
+        function selectOption(btn, qIdx, oIdx) {
+            // Nếu đã nộp bài rồi thì khóa tương tác chọn lại
+            if(document.getElementById('result-modal').style.display === 'flex') return;
+
+            // Xóa class active cũ trong câu hỏi này
+            const options = btn.parentElement.querySelectorAll('.option-btn');
+            options.forEach(opt => opt.style.backgroundColor = "white");
+
+            // Chọn đáp án mới
+            btn.style.backgroundColor = "var(--primary-blue)";
+            userAnswers[qIdx] = oIdx;
+
+            // Kích hoạt nút dịch nghĩa và mở khóa tính năng phụ
+            const transBtn = document.getElementById(`btn-trans-${qIdx}`);
+            transBtn.disabled = false;
+            transBtn.innerHTML = "👁️ Dịch nghĩa";
+
+            // Cập nhật trạng thái ô vuông tiến độ ở bên cạnh
+            const navItem = document.getElementById(`nav-${qIdx}`);
+            navItem.style.backgroundColor = "#e8f0fe";
+            navItem.style.borderColor = "var(--dark-blue)";
+
+            // Cập nhật thanh tiến độ chung (Progress bar)
+            const answeredCount = userAnswers.filter(ans => ans !== null).length;
+            const progressPercent = (answeredCount / quizData.length) * 100;
+            document.getElementById('progress-bar').style.width = `${progressPercent}%`;
+        }
+
+        function submitQuiz() {
+            let correctCount = 0;
+            let tagStats = {};
+
+            // Tính điểm số và phân tích tags sư phạm
+            quizData.forEach((item, index) => {
+                if(!tagStats[item.tag]) {
+                    tagStats[item.tag] = { total: 0, correct: 0 };
+                }
+                tagStats[item.tag].total++;
+
+                const navItem = document.getElementById(`nav-${index}`);
+                const cardOptions = document.querySelectorAll(`[data-q="${index}"]`);
+                const expBox = document.getElementById(`exp-${index}`);
+                
+                expBox.style.display = "block"; // Hiện giải thích
+
+                if (userAnswers[index] === item.correct) {
+                    correctCount++;
+                    tagStats[item.tag].correct++;
+                    navItem.className = 'q-num done-correct';
+                    
+                    // Highlight màu xanh cho đáp án đúng
+                    cardOptions.forEach(opt => {
+                        if(parseInt(opt.getAttribute('data-o')) === item.correct) opt.classList.add('correct');
+                    });
+                } else {
+                    navItem.className = 'q-num done-wrong';
+                    // Highlight đỏ cho câu sai và xanh cho câu đúng thực tế
+                    cardOptions.forEach(opt => {
+                        const oIdx = parseInt(opt.getAttribute('data-o'));
+                        if(oIdx === userAnswers[index]) opt.classList.add('wrong');
+                        if(oIdx === item.correct) opt.classList.add('correct');
+                    });
+                }
+            });
+
+            const finalScore = (correctCount * scorePerQuestion).toFixed(1);
+
+            // Ghi nhận hiển thị lên sidebar thống kê nhanh
             document.getElementById('stat-correct').innerText = correctCount;
-            const score = (correctCount / totalCount * 10).toFixed(1);
-            document.getElementById('stat-score').innerText = score;
-        }
+            document.getElementById('stat-score').innerText = finalScore;
 
-        function checkAnswer(btn, qIndex, optIndex) {
-            if (answeredSet.has(qIndex)) return;
-            answeredSet.add(qIndex);
-
-            const buttons = btn.parentElement.querySelectorAll('.option-btn');
-            const correctIndex = quizData[qIndex].correct;
-            const expBox = document.getElementById(`exp-${qIndex}`);
-            const transBtn = document.getElementById(`btn-trans-${qIndex}`);
-            const navNum = document.getElementById(`nav-${qIndex}`);
-
-            if (transBtn.hasAttribute('disabled')) {
-                transBtn.removeAttribute('disabled');
-                transBtn.innerHTML = '🌐 Dịch nghĩa';
-            }
-
-            if (optIndex === correctIndex) {
-                btn.classList.add('correct');
-                navNum.classList.add('done-correct');
-                correctCount++;
-            } else {
-                btn.classList.add('wrong');
-                navNum.classList.add('done-wrong');
-                buttons[correctIndex].classList.add('correct');
-            }
-
-            updateStats();
-            buttons.forEach(b => b.classList.add('disabled'));
-            const percent = (answeredSet.size / quizData.length) * 100;
-            document.getElementById('progress-bar').style.width = percent + '%';
-
-            expBox.innerHTML = `<strong>Giải thích chi tiết:</strong> ${quizData[qIndex].exp}`;
-            expBox.style.display = 'block';
-        }
-
-        // THUẬT TOÁN ĐÁNH GIÁ SƯ PHẠM
-       // Thay đổi logic đánh giá trong file HTML:
-function generateFeedbackReport(scoresObj) {
-    let report = { level: "", strengths: [], weaknesses: [], actionPlan: [] };
-
-    // 1. Phân tích điểm mạnh
-    if (scoresObj.room_types >= 80) report.strengths.push("Nắm vững từ vựng về các loại phòng trong nhà.");
-    if (scoresObj.furniture >= 80) report.strengths.push("Phân biệt tốt các loại đồ nội thất.");
-    
-    // 2. Phân tích điểm yếu và giao bài tập
-    if (scoresObj.spatial_relations < 60) {
-        report.weaknesses.push("Yếu phần giới từ chỉ vị trí (spatial relations: under, next to, behind...).");
-        report.actionPlan.push("Luyện tập thêm bài tập mô tả vị trí đồ vật trong phòng (VD: Mượn tranh và tự đặt câu).");
-    }
-    
-    if (scoresObj.house_types < 60) {
-        report.weaknesses.push("Nhầm lẫn giữa các loại hình nhà ở (town house, flat, stilt house).");
-        report.actionPlan.push("Học lại bảng từ vựng các kiểu nhà bằng hình ảnh thực tế.");
-    }
-    
-    // 3. Xếp loại tổng quát
-    // (Logic giữ nguyên như cũ, chỉ thay điều kiện nếu cần)
-    return report;
-}
-        }
-
-      function submitQuiz() {
-    if (window.innerWidth <= 768) toggleSidebar();
-    if (answeredSet.size < totalCount) {
-        if (!confirm(`Bạn mới làm ${answeredSet.size}/${totalCount} câu. Bạn có chắc muốn nộp bài không?`)) return;
-    }
-
-    const submitBtn = document.querySelector('.sidebar .btn-submit');
-    submitBtn.innerText = "Đang gửi...";
-    submitBtn.disabled = true;
-
-    // Tính toán dữ liệu
-    let stats = { vocab: { total: 0, correct: 0 }, collocations: { total: 0, correct: 0 }, phrasalVerbs: { total: 0, correct: 0 }, wordForm: { total: 0, correct: 0 } };
-    let correctList = [];
-    let wrongList = [];
-
-    for (let i = 0; i < totalCount; i++) {
-        let tag = quizData[i].tag || 'vocab';
-        if(!stats[tag]) stats[tag] = { total: 0, correct: 0 };
-        stats[tag].total++;
-        const navNum = document.getElementById(`nav-${i}`);
-        if (navNum.classList.contains('done-correct')) {
-            correctList.push(i + 1);
-            stats[tag].correct++;
-        } else {
-            wrongList.push(i + 1);
-        }
-    }
-
-    let scoresObj = {
-        vocab: stats.vocab.total > 0 ? (stats.vocab.correct / stats.vocab.total) * 100 : 100,
-        collocations: stats.collocations.total > 0 ? (stats.collocations.correct / stats.collocations.total) * 100 : 100,
-        phrasalVerbs: stats.phrasalVerbs.total > 0 ? (stats.phrasalVerbs.correct / stats.phrasalVerbs.total) * 100 : 100,
-        wordForm: stats.wordForm.total > 0 ? (stats.wordForm.correct / stats.wordForm.total) * 100 : 100
-    };
-
-    let report = generateFeedbackReport(scoresObj);
-    const finalScore = (correctCount / totalCount * 10).toFixed(1);
-
-    // Chuẩn bị dữ liệu gửi (Dạng URLSearchParams)
-    let formData = new URLSearchParams();
-    formData.append('studentName', currentUser);
-    formData.append('className', currentClass);
-    formData.append('quizName', LESSON_NAME);
-    formData.append('score', `${finalScore} (${correctCount}/${totalCount})`);
-    formData.append('correctAnswers', correctList.join(', '));
-    formData.append('wrongAnswers', wrongList.join(', '));
-    formData.append('level', report.level);
-    formData.append('strengths', report.strengths.join('\n'));
-    formData.append('weaknesses', report.weaknesses.join('\n'));
-    formData.append('actionPlan', report.actionPlan.join('\n'));
-
-    fetch(SCRIPT_URL, {
-        method: 'POST',
-        mode: 'no-cors',
-        body: formData
-    }).then(() => {
-        showResultModal(finalScore, report);
-        submitBtn.innerText = "Nộp bài";
-        submitBtn.disabled = false;
-    }).catch(() => {
-        alert("Lỗi mạng!");
-        submitBtn.innerText = "Nộp bài";
-        submitBtn.disabled = false;
-    });
-}
-        function showResultModal(score, report) {
-            document.getElementById('final-score').innerText = score;
+            // Ghi nhận thông tin lên Modal chi tiết kết quả sư phạm
             document.getElementById('final-correct').innerText = correctCount;
-            
-            // Hiển thị nội dung sư phạm lên Modal
-            document.getElementById('eval-level').innerText = report.level;
-            
-            const ulStrengths = document.getElementById('eval-strengths');
-            ulStrengths.innerHTML = "";
-            report.strengths.forEach(s => ulStrengths.innerHTML += `<li>${s}</li>`);
-            
-            const ulWeaknesses = document.getElementById('eval-weaknesses');
-            ulWeaknesses.innerHTML = "";
-            report.weaknesses.forEach(w => ulWeaknesses.innerHTML += `<li>${w}</li>`);
-            
-            const ulAction = document.getElementById('eval-action');
-            ulAction.innerHTML = "";
-            report.actionPlan.forEach(a => ulAction.innerHTML += `<li>${a}</li>`);
+            document.getElementById('final-score').innerText = finalScore;
 
-            document.getElementById('result-modal').style.display = 'flex';
+            // Xử lý logic Đánh Giá Sư Phạm từ ma trận kiến thức Tags
+            let levelText = "";
+            if (finalScore >= 8.5) levelText = "Xuất sắc (Thông hiểu & Vận dụng rất tốt)";
+            else if (finalScore >= 7.0) levelText = "Khá (Nắm vững kiến thức cơ bản)";
+            else if (finalScore >= 5.0) levelText = "Trung bình (Cần cố gắng rèn luyện thêm)";
+            else levelText = "Yếu (Hổng nhiều kiến thức nền tảng)";
+            document.getElementById('eval-level').innerText = levelText;
+
+            const tagNamesVi = {
+                "house_types": "Phân loại kiểu nhà (Flat, Town/Country house)",
+                "room_types": "Các phòng chức năng trong ngôi nhà",
+                "furniture": "Đồ dùng nội thất phòng ngủ/khách",
+                "house_items": "Đồ vật và dụng cụ nhà bếp, gia dụng",
+                "spatial_relations": "Giới từ chỉ vị trí và không gian"
+            };
+
+            let strengthsUl = document.getElementById('eval-strengths');
+            let weaknessesUl = document.getElementById('eval-weaknesses');
+            let actionUl = document.getElementById('eval-action');
+
+            strengthsUl.innerHTML = "";
+            weaknessesUl.innerHTML = "";
+            actionUl.innerHTML = "";
+
+            let hasWeakness = false;
+
+            for(let tag in tagStats) {
+                let percent = (tagStats[tag].correct / tagStats[tag].total) * 100;
+                let name = tagNamesVi[tag] || tag;
+                if(percent >= 70) {
+                    strengthsUl.innerHTML += `<li>Nắm vững nhóm từ vựng về <b>${name}</b> (${tagStats[tag].correct}/${tagStats[tag].total} câu).</li>`;
+                } else {
+                    hasWeakness = true;
+                    weaknessesUl.innerHTML += `<li>Còn sai sót hoặc chưa thuộc nhóm từ: <b>${name}</b> (${tagStats[tag].correct}/${tagStats[tag].total} câu).</li>`;
+                    actionUl.innerHTML += `<li>Học lại bộ từ vựng và làm thêm bài tập chuyên sâu của phần <b>${name}</b>.</li>`;
+                }
+            }
+
+            if(!hasWeakness) {
+                weaknessesUl.innerHTML = "<li>Tuyệt vời! Không phát hiện lỗ hổng lớn về mặt kiến thức.</li>";
+                actionUl.innerHTML = "<li>Tiếp tục phát huy và tăng tốc luyện tập các cấu trúc nâng cao tiếp theo.</li>";
+            }
+
+            // Hiện modal kết quả
+            document.getElementById('result-modal').style.display = "flex";
         }
 
         function closeModal() {
-            document.getElementById('result-modal').style.display = 'none';
+            document.getElementById('result-modal').style.display = "none";
         }
-
-        window.onload = initQuiz;
     </script>
 </body>
 </html>
