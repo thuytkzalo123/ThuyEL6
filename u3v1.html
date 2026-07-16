@@ -1,0 +1,1328 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Hệ thống Đánh giá Từ vựng & Ngữ pháp - Global Success</title>
+    <style>
+        :root {
+            --primary-blue: #e8f0fe;
+            --dark-blue: #1a73e8;
+            --border-color: #dadce0;
+            --correct-green: #1e8e3e;
+            --wrong-red: #d93025;
+            --trans-color: #5f6368;
+            --hint-bg: #fff8e1;
+            --hint-text: #f57f17;
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* === HEADER === */
+        .header {
+            background: white;
+            padding: 10px 20px;
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 101;
+            flex-shrink: 0;
+        }
+
+        .header-top { display: flex; align-items: center; gap: 15px; }
+        .menu-toggle { display: none; background: none; border: none; font-size: 1.5em; cursor: pointer; color: #5f6368; padding: 5px; }
+        .header-title { margin: 0; font-size: 1.2em; color: #202124; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .progress-container { width: 100%; height: 6px; background-color: #eee; border-radius: 4px; margin-top: 10px; }
+        #progress-bar { width: 0%; height: 100%; background-color: var(--dark-blue); border-radius: 4px; transition: width 0.4s ease; }
+
+        /* === MAIN LAYOUT === */
+        .main-container {
+            display: flex; flex: 1; padding: 20px; gap: 25px;
+            max-width: 1200px; margin: 0 auto; width: 100%; box-sizing: border-box; overflow: hidden;
+        }
+
+        /* === SIDEBAR === */
+        .sidebar {
+            width: 280px; background: white; padding: 20px; border-radius: 12px;
+            border: 1px solid var(--border-color); display: flex; flex-direction: column;
+            height: calc(100% - 40px); overflow-y: auto; flex-shrink: 0; transition: transform 0.3s ease; z-index: 1000;
+        }
+        .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999; }
+        
+        .stats-box { background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #eee; }
+        .stat-item { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.95em; color: #333; }
+        .stat-value { font-weight: bold; color: var(--dark-blue); }
+        .nav-container { flex: 1; overflow-y: auto; margin-bottom: 20px; }
+        .question-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+        .q-num {
+            aspect-ratio: 1; border: 1px solid var(--border-color); border-radius: 5px;
+            display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 0.9em; background: #fff;
+        }
+        .q-num.done-correct { background-color: #e6f4ea; border-color: var(--correct-green); color: var(--correct-green); font-weight: bold; }
+        .q-num.done-wrong { background-color: #fce8e6; border-color: var(--wrong-red); color: var(--wrong-red); font-weight: bold; }
+
+        .btn-submit {
+            width: 100%; padding: 12px; background-color: var(--dark-blue); color: white;
+            border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 1em;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        /* === QUIZ AREA === */
+        .quiz-area { flex: 1; overflow-y: auto; padding-right: 5px; padding-bottom: 20px; }
+        .question-card {
+            background: white; padding: 25px; border-radius: 12px; border: 1px solid var(--border-color);
+            margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; flex-direction: column;
+        }
+        .question-text { font-size: 1.1em; font-weight: 600; margin-bottom: 12px; line-height: 1.5; color: #202124; }
+        .btn-hint-toggle {
+            align-self: flex-start; background-color: white; border: 1px solid #ffb74d; color: #f57f17;
+            padding: 6px 12px; border-radius: 20px; font-size: 0.85em; cursor: pointer; display: flex; align-items: center; gap: 5px; margin-bottom: 15px;
+        }
+        .hint-content { display: none; background-color: #fff3e0; border-left: 4px solid #ffb74d; padding: 10px 15px; margin-bottom: 15px; border-radius: 4px; font-size: 0.95em; color: #e65100; }
+        .hint-content.show { display: block; animation: fadeIn 0.3s; }
+
+        .options-list { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .option-btn {
+            padding: 14px 16px; border: 1px solid var(--border-color); border-radius: 8px; background: white;
+            text-align: left; cursor: pointer; font-size: 1em; display: flex; flex-direction: column; line-height: 1.4; transition: background-color 0.2s;
+        }
+        .option-btn:active { background-color: #f1f3f4; }
+        .option-btn.disabled { cursor: default; opacity: 0.9; }
+        .option-btn.correct { background-color: #e6f4ea; border-color: var(--correct-green); color: var(--correct-green); }
+        .option-btn.wrong { background-color: #fce8e6; border-color: var(--wrong-red); color: var(--wrong-red); }
+
+        .btn-trans-toggle {
+            margin-top: 20px; align-self: flex-start; background: #f1f3f4; border: none; padding: 8px 16px;
+            border-radius: 20px; font-size: 0.9em; color: #555; display: flex; align-items: center; gap: 6px; font-weight: 500;
+        }
+        .btn-trans-toggle:disabled { opacity: 0.5; background-color: #eee; }
+        .trans-text { display: none; color: var(--trans-color); font-style: italic; font-size: 0.95em; margin-top: 5px; font-weight: normal; border-top: 1px dashed #eee; padding-top: 4px; }
+        .trans-text.show { display: block; animation: fadeIn 0.3s; }
+        .explanation-box { margin-top: 15px; padding: 15px; border-radius: 6px; background-color: #fffde7; border-left: 4px solid #fbc02d; display: none; font-size: 0.95em; line-height: 1.5; }
+
+        /* === MODAL & EVALUATION === */
+        .modal-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); z-index: 2000; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;
+        }
+        .modal-content {
+            background: white; padding: 25px; border-radius: 16px; width: 100%; max-width: 650px;
+            max-height: 90vh; overflow-y: auto; text-align: left; box-shadow: 0 10px 25px rgba(0,0,0,0.2); animation: zoomIn 0.3s;
+        }
+        .modal-header-score { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 15px; margin-bottom: 20px; }
+        .modal-score { font-size: 3em; font-weight: bold; color: var(--dark-blue); }
+        .eval-section { margin-bottom: 15px; padding: 15px; border-radius: 8px; background: #f8f9fa; }
+        .eval-section h4 { margin-top: 0; margin-bottom: 8px; color: #333; }
+        .eval-ul { margin: 0; padding-left: 20px; font-size: 0.95em; color: #444; line-height: 1.5; }
+        .eval-ul li { margin-bottom: 6px; }
+        .modal-btn { padding: 12px; background: var(--dark-blue); color: white; border: none; border-radius: 8px; font-size: 1.1em; cursor: pointer; width: 100%; margin-top: 15px; font-weight:bold; }
+
+        /* === RESPONSIVE === */
+        @media (max-width: 768px) {
+            .menu-toggle { display: block; }
+            body { height: auto; overflow: auto; }
+            .main-container { padding: 10px; display: block; height: auto; overflow: visible; }
+            .sidebar { position: fixed; top: 0; left: 0; width: 80%; max-width: 300px; height: 100%; margin: 0; border-radius: 0; border: none; transform: translateX(-100%); box-shadow: 2px 0 10px rgba(0,0,0,0.2); }
+            .sidebar.active { transform: translateX(0); }
+            .sidebar-overlay.active { display: block; }
+            .quiz-area { padding: 0; height: auto; overflow: visible; margin-bottom: 50px; }
+            .question-card { padding: 15px; margin-bottom: 15px; }
+            .options-list { grid-template-columns: 1fr; }
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes zoomIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        /* === LOGIN OVERLAY === */
+        #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 9999; display: flex; justify-content: center; align-items: center; }
+        .login-box { background: white; padding: 30px; border-radius: 12px; width: 90%; max-width: 350px; text-align: center; }
+        .login-input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid var(--border-color); border-radius: 8px; box-sizing: border-box; font-size: 1em; }
+        .login-error { color: var(--wrong-red); font-size: 0.9em; margin-bottom: 10px; display: none; }
+    </style>
+</head>
+<body>
+
+    <div id="login-overlay">
+        <div class="login-box">
+            <h2 style="margin-top: 0; color: var(--dark-blue);">Đăng nhập</h2>
+            <p style="font-size: 0.9em; color: #555;">Vui lòng nhập thông tin để làm bài</p>
+            <input type="text" id="student-name" class="login-input" placeholder="Họ và Tên của bạn" required>
+            <input type="text" id="student-class" class="login-input" placeholder="Lớp của bạn (VD: 9A1)" required>
+            <input type="password" id="student-pass" class="login-input" placeholder="Nhập mật khẩu" required>
+            <div id="login-error" class="login-error">Vui lòng nhập đủ thông tin và đúng mật khẩu!</div>
+            <button class="btn-submit" onclick="checkLogin()">Vào làm</button>
+        </div>
+    </div>
+
+    <div class="header">
+        <div class="header-top">
+            <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+            <h2 class="header-title">Bài tập tự luyện - Global Success</h2>
+        </div>
+        <div class="progress-container">
+            <div id="progress-bar"></div>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+        <div class="sidebar" id="sidebar">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h3 style="margin:0 0 10px 0; color:#444">Thống kê</h3>
+                <span onclick="toggleSidebar()" style="cursor:pointer; font-size:1.5em; color:#888; padding: 5px;" class="mobile-only">✕</span>
+            </div>
+            
+            <div class="stats-box">
+                <div class="stat-item">
+                    <span>Số câu đúng:</span>
+                    <span class="stat-value"><span id="stat-correct">0</span>/<span id="stat-total">0</span></span>
+                </div>
+                <div class="stat-item">
+                    <span>Điểm số:</span>
+                    <span class="stat-value"><span id="stat-score">0.0</span>/10</span>
+                </div>
+            </div>
+
+            <div class="nav-container">
+                <h4 style="margin:0 0 10px 0;">Danh sách câu hỏi</h4>
+                <div class="question-grid" id="q-nav"></div>
+            </div>
+
+            <button class="btn-submit" onclick="submitQuiz()">Nộp bài</button>
+        </div>
+
+        <div class="quiz-area" id="quiz-container"></div>
+    </div>
+
+    <div class="modal-overlay" id="result-modal">
+        <div class="modal-content">
+            <div class="modal-header-score">
+                <div>
+                    <h2 style="margin: 0; color: #333;">Kết quả bài làm</h2>
+                    <p style="margin: 5px 0 0 0; color: #666;">Số câu đúng: <b id="final-correct">0</b>/<span id="final-total">0</span></p>
+                </div>
+                <div class="modal-score" id="final-score">0.0</div>
+            </div>
+            
+            <!-- Vùng Đánh Giá Sư Phạm -->
+            <div class="eval-section" style="background-color: #e3f2fd;">
+                <h4 style="color: #1565c0;">📊 Mức độ nhận thức</h4>
+                <div id="eval-level" style="font-weight: 500; color: #0d47a1;">---</div>
+            </div>
+            
+            <div class="eval-section" style="background-color: #e8f5e9; border-left: 4px solid #4caf50;">
+                <h4 style="color: #2e7d32;">✨ Điểm mạnh</h4>
+                <ul class="eval-ul" id="eval-strengths"></ul>
+            </div>
+
+            <div class="eval-section" style="background-color: #fce8e6; border-left: 4px solid #d32f2f;">
+                <h4 style="color: #c62828;">⚠️ Trọng tâm bị hổng (Điểm yếu)</h4>
+                <ul class="eval-ul" id="eval-weaknesses"></ul>
+            </div>
+
+            <div class="eval-section" style="background-color: #fff8e1; border-left: 4px solid #fbc02d;">
+                <h4 style="color: #f57f17;">🎯 Định hướng học tập</h4>
+                <ul class="eval-ul" id="eval-action"></ul>
+            </div>
+            
+            <button class="modal-btn" onclick="closeModal()">Đóng & Xem lại chi tiết</button>
+        </div>
+    </div>
+
+    <script>
+        // === TỪ ĐIỂN CHẨN ĐOÁN SƯ PHẠM (MASTER FEEDBACK CONFIG) ===
+        const feedbackConfig = {
+            // Nhóm Chủ đề (Topics)
+            "topic_family": {
+                title: "Chủ đề Gia đình (Family Life)",
+                strength: "Nắm rất vững từ vựng và ngữ cảnh giao tiếp về chủ đề Gia đình.",
+                weak: "Chưa nhớ kỹ từ vựng và các tình huống giao tiếp về chủ đề Gia đình.",
+                action: "Ôn lại sơ đồ tư duy (Mindmap) từ vựng về các mối quan hệ gia đình và công việc nhà trong SGK."
+            },
+            "topic_nature": {
+                title: "Chủ đề Tự nhiên & Kỳ quan (Nature & Wonders)",
+                strength: "Vốn từ vựng phong phú khi miêu tả cảnh quan tự nhiên và các kỳ quan.",
+                weak: "Thiếu từ vựng miêu tả địa hình, thiên nhiên và các kỳ quan thế giới.",
+                action: "Lập danh sách các tính từ miêu tả cảnh đẹp (breathtaking, magnificent...) và tập đặt câu với địa danh thực tế."
+            },
+            "topic_env": {
+                title: "Chủ đề Môi trường (The Environment)",
+                strength: "Hiểu sâu các thuật ngữ chuyên môn về bảo vệ môi trường và hệ sinh thái.",
+                weak: "Hổng từ vựng chuyên ngành về môi trường, ô nhiễm và năng lượng xanh.",
+                action: "Đọc lại các bài đọc hiểu (Reading) chủ đề Environment, chú ý các cụm từ chỉ nguyên nhân - kết quả."
+            },
+            "topic_tech": {
+                title: "Chủ đề Công nghệ & Khoa học (Science & Technology)",
+                strength: "Sử dụng chính xác các từ vựng hiện đại về công nghệ, thiết bị số và AI.",
+                weak: "Gặp khó khăn với các từ vựng chuyên ngành Khoa học - Công nghệ.",
+                action: "Học từ mới thông qua việc xem các video khoa học ngắn bằng tiếng Anh (chú ý bật phụ đề)."
+            },
+            "topic_culture": {
+                title: "Chủ đề Văn hoá & Di sản (Culture & Heritage)",
+                strength: "Am hiểu từ vựng về truyền thống, phong tục và bảo tồn di sản văn hóa.",
+                weak: "Chưa nắm vững cách diễn đạt về văn hóa truyền thống và bảo tồn di sản.",
+                action: "Tổng hợp các danh từ chỉ di tích (pagoda, temple, structure) và động từ bảo tồn (preserve, restore)."
+            },
+            "topic_travel": {
+                title: "Chủ đề Du lịch & Khám phá (Travel & Tourism)",
+                strength: "Tự tin sử dụng từ vựng về đặt phòng, hỏi đường và trải nghiệm du lịch.",
+                weak: "Yếu từ vựng về các phương tiện di chuyển, địa điểm du lịch và thủ tục.",
+                action: "Thực hành viết một đoạn văn ngắn (khoảng 80 từ) lên kế hoạch cho một chuyến du lịch bằng tiếng Anh."
+            },
+            "topic_career": {
+                title: "Chủ đề Nghề nghiệp & Tương lai (Careers & The Future)",
+                strength: "Nắm vững yêu cầu công việc và từ vựng định hướng nghề nghiệp.",
+                weak: "Thiếu từ vựng chỉ nghề nghiệp mới và các kỹ năng làm việc trong tương lai.",
+                action: "Học thuộc các cụm từ chỉ kỹ năng (soft skills, teamwork) và áp dụng vào bài tập điền từ."
+            },
+            "topic_living": {
+                title: "Chủ đề Đời sống Nông thôn - Thành thị (Country & City Life)",
+                strength: "Phân biệt và miêu tả rất tốt đặc điểm đời sống nông thôn và đô thị.",
+                weak: "Chưa nhớ các tính từ so sánh nhịp sống giữa thành thị và nông thôn.",
+                action: "Vẽ bảng đối chiếu Bảng từ vựng City vs. Countryside (VD: bustling vs. tranquil) để ghi nhớ."
+            },
+            "topic_health": {
+                title: "Chủ đề Sức khỏe & Lối sống (Health & Healthy Living)",
+                strength: "Am hiểu từ vựng về chế độ dinh dưỡng, tập luyện và lối sống lành mạnh.",
+                weak: "Gặp khó khăn khi gọi tên các triệu chứng bệnh và lời khuyên sức khỏe.",
+                action: "Ôn lại cấu trúc đưa ra lời khuyên (should / ought to / had better) kết hợp từ vựng về sức khỏe."
+            },
+            "topic_community": {
+                title: "Chủ đề Cộng đồng địa phương (Local Community)",
+                strength: "Hiểu rõ từ vựng về làng nghề truyền thống và hoạt động cộng đồng.",
+                weak: "Chưa nhớ tên các làng nghề truyền thống, sản phẩm thủ công và dịch vụ công cộng.",
+                action: "Học theo cụm danh từ chỉ nghề thủ công (pottery making, artisan, lacquerware) trong SGK."
+            },
+            "topic_edu": {
+                title: "Chủ đề Học tập & Tiếng Anh (Education & English Learning)",
+                strength: "Nắm vững thuật ngữ về phương pháp học tập và kỹ năng ngôn ngữ.",
+                weak: "Thiếu từ vựng về trường lớp, thi cử và việc rèn luyện ngoại ngữ.",
+                action: "Ghi chép lại các phương pháp học từ vựng hiệu quả bằng tiếng Anh và tự áp dụng hàng ngày."
+            },
+            "topic_hobbies": {
+                title: "Chủ đề Giải trí & Sở thích (Leisure & Hobbies)",
+                strength: "Sử dụng linh hoạt từ vựng miêu tả sở thích và thời gian rảnh rỗi.",
+                weak: "Chưa thành thạo các động từ chỉ sự yêu thích đi kèm V-ing / to V.",
+                action: "Học thuộc lòng bảng động từ chỉ sở thích (fancy, adore, detest + V-ing) qua việc tự đặt câu về bản thân."
+            },
+
+            // Nhóm Từ vựng (Vocabulary Skills)
+            "skill_vocab_core": {
+                title: "Từ vựng nền tảng (Core Vocabulary)",
+                strength: "Nắm rất vững nghĩa và cách dùng của các từ vựng cốt lõi trong bài.",
+                weak: "Thiếu vốn từ vựng cơ bản, gặp khó khăn khi hiểu nghĩa của câu hỏi.",
+                action: "Dừng việc dịch word-by-word. Học lại bảng từ vựng SGK, chú ý phát âm và nghĩa trong ngữ cảnh."
+            },
+            "skill_vocab_colloc": {
+                title: "Cụm từ cố định (Collocations)",
+                strength: "Sử dụng thành thạo các cụm từ cố định tự nhiên như người bản xứ.",
+                weak: "Hổng mảng Cụm từ cố định, thường ghép từ tùy tiện theo tư duy tiếng Việt.",
+                action: "Chấm dứt học từ đơn lẻ. Khi gặp từ mới, bắt buộc phải học cả cụm (VD: học 'take pride in' thay vì chỉ học 'pride')."
+            },
+            "skill_vocab_phrasal": {
+                title: "Cụm động từ (Phrasal Verbs)",
+                strength: "Phản xạ rất tốt với các cụm động từ và giới từ đi kèm.",
+                weak: "Yếu mảng Cụm động từ, thường nhầm lẫn nghĩa khi thay đổi giới từ.",
+                action: "Lập sổ tay chuyên đề Phrasal Verbs, vẽ hình ảnh minh họa cho các giới từ (up, down, off, over) để nhớ nghĩa chuyển."
+            },
+            "skill_vocab_wordform": {
+                title: "Biến đổi từ loại (Word Form)",
+                strength: "Phân tích cấu trúc câu tốt, nhận diện chính xác Danh - Động - Tính - Trạng.",
+                weak: "Hay nhầm lẫn giữa các từ loại hoặc từ có vỏ chữ giống nhau.",
+                action: "Rèn tính cẩn thận. Học thuộc các hậu tố từ loại (VD: -tion là danh từ, -ive là tính từ) và xác định từ loại trước khi chọn đáp án."
+            },
+
+            // Nhóm Ngữ pháp (Grammar Skills)
+            "skill_gram_tense": {
+                title: "Các thì trong Tiếng Anh (Tenses)",
+                strength: "Chia thì chính xác, nhận diện tốt dấu hiệu thời gian trong câu.",
+                weak: "Chưa nắm vững công thức và cách dùng của các thì căn bản.",
+                action: "Vẽ trục thời gian (Timeline) cho các thì, học thuộc lòng các trạng từ nhận biết (yesterday, since, tomorrow...)."
+            },
+            "skill_gram_passive": {
+                title: "Câu bị động (Passive Voice)",
+                strength: "Chuyển đổi thành thạo cấu trúc chủ động sang bị động ở các thì.",
+                weak: "Thường quên cấu trúc 'To be + V3/ed' hoặc chia sai động từ To be.",
+                action: "Luyện tập chuyên đề Câu bị động. Luôn xác định tân ngữ (Object) và thì của câu chủ động trước khi làm bài."
+            },
+            "skill_gram_reported": {
+                title: "Câu tường thuật (Reported Speech)",
+                strength: "Nắm vững quy tắc lùi thì và đổi ngôi trong câu tường thuật.",
+                weak: "Hay quên 'lùi thì' hoặc chưa đổi trạng từ chỉ thời gian/nơi chốn.",
+                action: "Học thuộc bảng chuyển đổi trạng từ (now -> then, tomorrow -> the next day) và quy tắc lùi 1 thì về quá khứ."
+            },
+            "skill_gram_relative": {
+                title: "Mệnh đề quan hệ (Relative Clauses)",
+                strength: "Sử dụng chính xác các đại từ quan hệ (who, which, that, where, whose).",
+                weak: "Nhầm lẫn chức năng của các đại từ quan hệ hoặc dùng sai dấu phẩy.",
+                action: "Làm bài tập nối 2 câu thành 1 câu dùng mệnh đề quan hệ. Nhớ quy tắc: 'who' cho người, 'which' cho vật, 'whose' chỉ sở hữu."
+            },
+            "skill_gram_conditional": {
+                title: "Câu điều kiện (Conditionals)",
+                strength: "Phân biệt và áp dụng rất tốt câu điều kiện loại 1, 2 và 3.",
+                weak: "Nhầm lẫn công thức giữa các loại câu điều kiện, đặc biệt là loại 2.",
+                action: "Ghi nhớ công thức lùi thì: Loại 1 (Có thể xảy ra -> HTĐ + TlĐ), Loại 2 (Không có thật ở hiện tại -> QKĐ + Would + V)."
+            },
+            "skill_gram_wish": {
+                title: "Cấu trúc Câu ước (Wish / If only)",
+                strength: "Thành thạo cấu trúc giả định với Wish ở hiện tại và tương lai.",
+                weak: "Quên quy tắc lùi thì sau động từ Wish.",
+                action: "Nhớ thần chú 'Ước là phải lùi thì': Ước cho hiện tại dùng Quá khứ đơn (Be -> were cho mọi ngôi)."
+            },
+            "skill_gram_adverbial": {
+                title: "Mệnh đề trạng ngữ (Adverbial Clauses)",
+                strength: "Kết nối câu logic bằng các mệnh đề chỉ nguyên nhân, kết quả, thời gian.",
+                weak: "Chưa hiểu nghĩa của các liên từ nối mệnh đề (although, because, when...).",
+                action: "Phân loại liên từ theo nhóm ý nghĩa: Nhượng bộ (Although/Even though), Nguyên nhân (Because/As/Since)."
+            },
+            "skill_gram_comparison": {
+                title: "Cấu trúc So sánh (Comparisons)",
+                strength: "Vận dụng tốt so sánh hơn, so sánh nhất và so sánh kép (The more... the more).",
+                weak: "Chia sai tính từ ngắn/dài hoặc nhầm lẫn giữa so sánh hơn và so sánh nhất.",
+                action: "Học thuộc bảng tính từ bất quy tắc (good -> better -> best) và nhận diện từ khóa 'than' (so sánh hơn), 'the' (so sánh nhất)."
+            },
+            "skill_gram_modal": {
+                title: "Động từ khuyết thiếu (Modal Verbs)",
+                strength: "Hiểu sắc thái biểu cảm của can, must, should, have to, might...",
+                weak: "Dùng sai động từ khuyết thiếu trong các tình huống đưa lời khuyên, bắt buộc.",
+                action: "Ghi nhớ sau Modal Verb luôn là Động từ nguyên thể (V-inf). Phân biệt 'must' (tự bắt buộc) và 'have to' (ngoại cảnh bắt buộc)."
+            },
+            "skill_gram_article": {
+                title: "Mạo từ (Articles: A / An / The / Zero)",
+                strength: "Sử dụng mạo từ chuẩn xác theo danh từ xác định và chưa xác định.",
+                weak: "Thường bỏ quên mạo từ hoặc dùng 'the' trước danh từ chung chưa xác định.",
+                action: "Nhớ quy tắc: 'A/An' dùng cho lần đầu nhắc đến (số ít), 'The' dùng cho vật duy nhất hoặc cả người nói và nghe đều đã biết."
+            },
+            "skill_gram_quantifier": {
+                title: "Lượng từ (Quantifiers)",
+                strength: "Phân biệt chính xác much/many, a few/a little, some/any.",
+                weak: "Nhầm lẫn giữa danh từ đếm được và không đếm được khi đi với lượng từ.",
+                action: "Lập 2 cột danh từ Đếm được (Many, A few) và Không đếm được (Much, A little) để tự sắp xếp từ vựng."
+            },
+            "skill_gram_connector": {
+                title: "Từ nối & Liên từ (Connectors & Conjunctions)",
+                strength: "Tạo sự mạch lạc cho câu bằng từ nối (however, therefore, moreover...).",
+                weak: "Dùng sai từ nối chỉ sự tương phản hoặc kết quả, đặt sai vị trí dấu câu.",
+                action: "Chú ý dấu câu: 'However, Therefore' thường đứng sau dấu chấm và trước dấu phẩy. Luyện tập chọn từ nối theo ngữ cảnh logic."
+            }
+        };
+
+        // === DỮ LIỆU CAU HỎI (TÍCH HỢP DUAL-TAGS & 3S EXPLANATION) ===
+        const quizData = [
+  {
+    "q": "Mina is very ______. She likes drawing pictures. She always has lots of new ideas.[cite: 5]",
+    "qVi": "Mina rất ______. Cô ấy thích vẽ tranh. Cô ấy luôn có rất nhiều ý tưởng mới.",
+    "key": ["drawing pictures", "lots of new ideas"],
+    "opts": ["creative", "kind", "shy", "boring"],
+    "optsVi": ["sáng tạo", "tốt bụng", "nhút nhát", "nhàm chán"],
+    "correct": 0,
+    "exp": "Tính từ <b>creative</b> (sáng tạo) phản ánh chính xác đặc điểm của một người thích vẽ tranh (drawing pictures) và luôn có nhiều ý tưởng mới (lots of new ideas)[cite: 5].",
+    "tags": ["topic_community", "skill_vocab_core"]
+  },
+  {
+    "q": "Nam is ______. He likes helping his friends with their homework.[cite: 5]",
+    "qVi": "Nam rất ______. Cậu ấy thích giúp đỡ bạn bè làm bài tập về nhà.",
+    "key": ["helping his friends"],
+    "opts": ["hard-working", "kind", "careful", "funny"],
+    "optsVi": ["chăm chỉ", "tốt bụng", "cẩn thận", "hài hước"],
+    "correct": 1,
+    "exp": "Hành động sẵn lòng giúp đỡ bạn bè (helping his friends) thể hiện tính cách <b>kind</b> (tốt bụng, tử tế)[cite: 5].",
+    "tags": ["topic_community", "skill_vocab_core"]
+  },
+  {
+    "q": "Minh Duc is ______. He likes meeting new people at the summer camp.[cite: 5]",
+    "qVi": "Minh Đức rất ______. Cậu ấy thích làm quen với những người bạn mới tại trại hè.",
+    "key": ["meeting new people"],
+    "opts": ["shy", "friendly", "clever", "quiet"],
+    "optsVi": ["nhút nhát / xấu hổ", "thân thiện", "thông minh", "yên lặng / ít nói"],
+    "correct": 1,
+    "exp": "Người có sở thích giao lưu, gặp gỡ người mới (meeting new people) là người có tính cách <b>friendly</b> (thân thiện, cởi mở)[cite: 5].",
+    "tags": ["topic_community", "skill_vocab_core"]
+  },
+  {
+    "q": "Kim is very ______. She always pays attention to what she's doing.[cite: 5]",
+    "qVi": "Kim rất ______. Cô ấy luôn chú ý đến những gì mình đang làm.",
+    "key": ["pays attention to what she's doing"],
+    "opts": ["confident", "caring", "careful", "active"],
+    "optsVi": ["tự tin", "chu đáo / quan tâm", "cẩn thận", "năng động"],
+    "correct": 2,
+    "exp": "Cụm từ 'pay attention to' (chú ý/tập trung vào) chỉ tính cách <b>careful</b> (cẩn thận, kỹ lưỡng) trong công việc và học tập[cite: 5].",
+    "tags": ["topic_edu", "skill_vocab_core"]
+  },
+  {
+    "q": "Mai is ______. She learns things quickly and easily.[cite: 5]",
+    "qVi": "Mai rất ______. Cô ấy tiếp thu mọi thứ một cách nhanh chóng và dễ dàng.",
+    "key": ["learns things quickly and easily"],
+    "opts": ["funny", "clever", "friendly", "shy"],
+    "optsVi": ["hài hước", "thông minh / sáng dạ", "thân thiện", "nhút nhát"],
+    "correct": 1,
+    "exp": "Khả năng học hỏi nhanh chóng và dễ dàng (learns things quickly and easily) là định nghĩa chuẩn xác của tính từ <b>clever</b> (thông minh, sáng dạ)[cite: 5].",
+    "tags": ["topic_edu", "skill_vocab_core"]
+  },
+  {
+    "q": "Nick is very ______. He always makes everyone laugh![cite: 5]",
+    "qVi": "Nick rất ______. Cậu ấy luôn làm cho mọi người cười!",
+    "key": ["makes everyone laugh"],
+    "opts": ["funny", "active", "careful", "hard-working"],
+    "optsVi": ["hài hước / vui tính", "năng động", "cẩn thận", "chăm chỉ"],
+    "correct": 0,
+    "exp": "Người có khả năng chọc cười người khác (makes everyone laugh) mang tính cách <b>funny</b> (hài hước, vui nhộn)[cite: 5].",
+    "tags": ["topic_community", "skill_vocab_core"]
+  },
+  {
+    "q": "My sister always does her homework before class. She's very ______.[cite: 5]",
+    "qVi": "Chị gái tôi luôn làm bài tập về nhà trước khi đến lớp. Chị ấy rất ______.",
+    "key": ["does her homework before class"],
+    "opts": ["lazy", "hard-working", "funny", "creative"],
+    "optsVi": ["lười biếng", "chăm chỉ / siêng năng", "hài hước", "sáng tạo"],
+    "correct": 1,
+    "exp": "Thói quen luôn hoàn thành bài tập trước buổi học (does her homework before class) thể hiện sự <b>hard-working</b> (chăm chỉ, siêng năng)[cite: 5].",
+    "tags": ["topic_family", "skill_vocab_core"]
+  },
+  {
+    "q": "He is a ______ person. He cares about everybody in the family.[cite: 5]",
+    "qVi": "Anh ấy là một người ______. Anh ấy quan tâm đến tất cả mọi người trong gia đình.",
+    "key": ["cares about everybody"],
+    "opts": ["funny", "caring", "clever", "active"],
+    "optsVi": ["hài hước", "chu đáo / biết quan tâm", "thông minh", "năng động"],
+    "correct": 1,
+    "exp": "Tính từ <b>caring</b> (chu đáo, biết quan tâm) xuất phát trực tiếp từ động từ 'care about' (quan tâm đến ai) ở câu sau[cite: 5].",
+    "tags": ["topic_family", "skill_vocab_core"]
+  },
+  {
+    "q": "My best friend is very ______. She likes doing outdoor activities.[cite: 5]",
+    "qVi": "Bạn thân nhất của tôi rất ______. Cô ấy thích tham gia các hoạt động ngoài trời.",
+    "key": ["doing outdoor activities"],
+    "opts": ["shy", "careful", "active", "quiet"],
+    "optsVi": ["nhút nhát", "cẩn thận", "năng động / tích cực", "yên lặng"],
+    "correct": 2,
+    "exp": "Sở thích tham gia các hoạt động ngoài trời (outdoor activities) là đặc trưng của một người <b>active</b> (năng động, tháo vát)[cite: 5].",
+    "tags": ["topic_hobbies", "skill_vocab_core"]
+  },
+  {
+    "q": "Children are often ______. They hide behind their mothers when guests come.[cite: 5]",
+    "qVi": "Trẻ nhỏ thường hay ______. Chúng nấp sau lưng mẹ khi có khách đến nhà.",
+    "key": ["hide behind their mothers", "when guests come"],
+    "opts": ["friendly", "shy", "confident", "active"],
+    "optsVi": ["thân thiện", "nhút nhát / bẽn lẽn", "tự tin", "năng động"],
+    "correct": 1,
+    "exp": "Hành động xấu hổ, nấp sau lưng mẹ (hide behind their mothers) thể hiện sự <b>shy</b> (nhút nhát, bẽn lẽn) khi gặp người lạ[cite: 5].",
+    "tags": ["topic_family", "skill_vocab_core"]
+  },
+  {
+    "q": "Nam can wait hours for his friends without getting angry. He is a ______ boy.[cite: 5]",
+    "qVi": "Nam có thể đợi bạn bè hàng giờ liền mà không hề tức giận. Cậu ấy là một chàng trai ______.",
+    "key": ["wait hours", "without getting angry"],
+    "opts": ["patient", "hard-working", "active", "funny"],
+    "optsVi": ["kiên nhẫn", "chăm chỉ", "năng động", "hài hước"],
+    "correct": 0,
+    "exp": "Khả năng chờ đợi lâu mà không nổi nóng (wait hours without getting angry) thể hiện tính <b>patient</b> (kiên nhẫn, nhẫn nại)[cite: 5].",
+    "tags": ["topic_community", "skill_vocab_core"]
+  },
+  {
+    "q": "The baby next to me is very ______. He talks all the time, which really annoys me.[cite: 5]",
+    "qVi": "Đứa bé cạnh tôi rất ______. Nó nói chuyện suốt ngày, điều đó thực sự làm tôi phiền phức.",
+    "key": ["talks all the time", "annoys me"],
+    "opts": ["silent", "shy", "talkative", "clever"],
+    "optsVi": ["yên lặng", "nhút nhát", "lắm lời / hay nói", "thông minh"],
+    "correct": 2,
+    "exp": "Việc nói chuyện liên tục không ngừng (talks all the time) là định nghĩa của từ <b>talkative</b> (hay nói, nói nhiều)[cite: 5].",
+    "tags": ["topic_community", "skill_vocab_core"]
+  },
+  {
+    "q": "Daisy is very ______ to take the test. She is a very good student.[cite: 5]",
+    "qVi": "Daisy rất ______ khi bước vào kỳ thi. Cô ấy là một học sinh rất giỏi.",
+    "key": ["take the test", "very good student"],
+    "opts": ["confident", "shy", "funny", "friendly"],
+    "optsVi": ["tự tin", "nhút nhát", "hài hước", "thân thiện"],
+    "correct": 0,
+    "exp": "Một học sinh giỏi (good student) đã chuẩn bị kỹ lưỡng sẽ cảm thấy <b>confident</b> (tự tin) khi làm bài thi[cite: 5].",
+    "tags": ["topic_edu", "skill_vocab_core"]
+  },
+  {
+    "q": "My best friend’s name is Nhi. She has a round ______ with long black hair.[cite: 5]",
+    "qVi": "Bạn thân nhất của tôi tên là Nhi. Cô ấy có khuôn ______ tròn với mái tóc đen dài.",
+    "key": ["round", "with long black hair"],
+    "opts": ["body", "face", "neck", "shoulder"],
+    "optsVi": ["cơ thể", "khuôn mặt", "cái cổ", "bờ vai"],
+    "correct": 1,
+    "exp": "Cụm từ miêu tả ngoại hình quen thuộc: <b>round face</b> (khuôn mặt tròn)[cite: 5]. Các từ khác không đi với tính từ 'round' trong ngữ cảnh miêu tả khuôn mặt đi kèm mái tóc[cite: 5].",
+    "tags": ["topic_community", "skill_vocab_colloc"]
+  },
+  {
+    "q": "What does she look like? She’s short with long ______ hair.[cite: 5]",
+    "qVi": "Cô ấy trông như thế nào? Cô ấy thấp với mái tóc ______ dài.",
+    "key": ["long", "hair"],
+    "opts": ["black", "blue", "bright", "round"],
+    "optsVi": ["màu đen", "màu xanh dương", "sáng / thông minh", "hình tròn"],
+    "correct": 0,
+    "exp": "Màu sắc tự nhiên của mái tóc trong ngữ cảnh phổ thông là <b>black</b> (tóc đen)[cite: 5]. 'Round' dùng cho mặt/mắt, 'bright' dùng cho mắt/nụ cười[cite: 5].",
+    "tags": ["topic_community", "skill_vocab_colloc"]
+  },
+  {
+    "q": "Lan has short hair and a ______ nose.[cite: 5]",
+    "qVi": "Lan có mái tóc ngắn và một chiếc mũi ______.",
+    "key": ["nose"],
+    "opts": ["long", "big", "small", "tall"],
+    "optsVi": ["dài", "to", "nhỏ", "cao"],
+    "correct": 2,
+    "exp": "Trong tiếng Anh, miêu tả chiếc mũi nhỏ nhắn và cân đối thường dùng tính từ <b>small nose</b> (hoặc straight nose)[cite: 5]. 'Tall' chỉ chiều cao con người/tòa nhà, không dùng cho mũi[cite: 5].",
+    "tags": ["topic_community", "skill_vocab_colloc"]
+  },
+  {
+    "q": "She is a beautiful girl. She has short hair and big blue ______.[cite: 5]",
+    "qVi": "Cô ấy là một cô gái xinh đẹp. Cô ấy có mái tóc ngắn và đôi ______ màu xanh dương to tròn.",
+    "key": ["big blue"],
+    "opts": ["noses", "hands", "cheeks", "eyes"],
+    "optsVi": ["những chiếc mũi", "bàn tay", "gò má", "đôi mắt"],
+    "correct": 3,
+    "exp": "Màu sắc 'blue' (xanh dương) và tính từ 'big' (to tròn) là cụm từ điển hình dùng để miêu tả <b>eyes</b> (đôi mắt)[cite: 5].",
+    "tags": ["topic_community", "skill_vocab_colloc"]
+  },
+  {
+    "q": "Please be ______ when you have to use fire to cook.[cite: 5]",
+    "qVi": "Vui lòng ______ khi bạn phải sử dụng lửa để nấu nướng.",
+    "key": ["use fire to cook"],
+    "opts": ["confident", "careful", "caring", "funny"],
+    "optsVi": ["tự tin", "cẩn thận / thận trọng", "chu đáo", "hài hước"],
+    "correct": 1,
+    "exp": "Khi sử dụng lửa nấu nướng (use fire to cook), yếu tố an toàn là hàng đầu nên cần phải <b>careful</b> (cẩn thận, chú ý)[cite: 5].",
+    "tags": ["topic_health", "skill_vocab_core"]
+  },
+  {
+    "q": "Binh is a ______ pupil. He always finishes all homework.[cite: 5]",
+    "qVi": "Bình là một học sinh ______. Cậu ấy luôn hoàn thành tất cả bài tập về nhà.",
+    "key": ["always finishes all homework"],
+    "opts": ["hard-working", "friendly", "creative", "talkative"],
+    "optsVi": ["chăm chỉ", "thân thiện", "sáng tạo", "lắm lời"],
+    "correct": 0,
+    "exp": "Học sinh luôn hoàn thành mọi bài tập về nhà (finishes all homework) là người <b>hard-working</b> (chăm chỉ, siêng năng)[cite: 5].",
+    "tags": ["topic_edu", "skill_vocab_core"]
+  },
+  {
+    "q": "I am not ______. I like sitting in the classroom at break time.[cite: 5]",
+    "qVi": "Tôi không phải là người ______. Tôi thích ngồi trong phòng học vào giờ ra chơi.",
+    "key": ["not", "sitting in the classroom at break time"],
+    "opts": ["active", "caring", "funny", "clever"],
+    "optsVi": ["năng động", "chu đáo", "hài hước", "thông minh"],
+    "correct": 0,
+    "exp": "Việc chỉ thích ngồi yên trong lớp giờ ra chơi trái ngược với vận động thể chất, chứng tỏ người nói không phải là người <b>active</b> (năng động)[cite: 5].",
+    "tags": ["topic_edu", "skill_vocab_core"]
+  },
+  {
+    "q": "What does your best friend ______ like? She's short with long black hair.[cite: 5]",
+    "qVi": "Bạn thân nhất của bạn trông ______ như thế nào? Cô ấy thấp với mái tóc đen dài.",
+    "key": ["What does", "like", "short with long black hair"],
+    "opts": ["seem", "see", "look", "make"],
+    "optsVi": ["dường như", "nhìn thấy", "trông có vẻ / trông như", "làm / tạo ra"],
+    "correct": 2,
+    "exp": "Cấu trúc hỏi về ngoại hình: <b>What + do/does + S + look like?</b> (Ai đó trông như thế nào?)[cite: 5]. Phân biệt: 'What is she like?' hỏi về tính cách[cite: 5].",
+    "tags": ["topic_community", "skill_vocab_colloc"]
+  },
+  {
+    "q": "Look! It's Mai. And she is with someone. She has ______ and long black hair.[cite: 5]",
+    "qVi": "Nhìn kìa! Đó là Mai. Và cô ấy đang ở cùng ai đó. Cô ấy đeo ______ và có mái tóc đen dài.",
+    "key": ["she is with someone", "has"],
+    "opts": ["hats", "glasses", "shoes", "books"],
+    "optsVi": ["những chiếc mũ", "kính đeo mắt", "đôi giày", "những cuốn sách"],
+    "correct": 1,
+    "exp": "Động từ 'have/has' hoặc 'wear' thường đi với <b>glasses</b> (kính cận/kính đeo mắt) để miêu tả đặc điểm khuôn mặt của một người[cite: 5].",
+    "tags": ["topic_community", "skill_vocab_colloc"]
+  },
+  {
+    "q": "My mum always asks me to wash my ______ before meals.[cite: 5]",
+    "qVi": "Mẹ tôi luôn bảo tôi phải rửa ______ trước các bữa ăn.",
+    "key": ["wash", "before meals"],
+    "opts": ["hands", "legs", "shoulders", "feet"],
+    "optsVi": ["bàn tay", "đôi chân", "bờ vai", "bàn chân"],
+    "correct": 0,
+    "exp": "Quy tắc vệ sinh cơ bản trước bữa ăn (before meals) là phải rửa <b>hands</b> (bàn tay)[cite: 5].",
+    "tags": ["topic_health", "skill_vocab_colloc"]
+  },
+  {
+    "q": "The part between the head and the body is the ______.[cite: 5]",
+    "qVi": "Bộ phận nằm giữa đầu và thân mình là ______.",
+    "key": ["between the head and the body"],
+    "opts": ["neck", "shoulder", "arm", "leg"],
+    "optsVi": ["cái cổ", "bờ vai", "cánh tay", "cạch chân"],
+    "correct": 0,
+    "exp": "Về mặt giải phẫu cơ thể, bộ phận nối liền giữa đầu (head) và thân mình (body) chính là <b>neck</b> (cái cổ)[cite: 5].",
+    "tags": ["topic_health", "skill_vocab_core"]
+  },
+  {
+    "q": "My friend is very ______. She often looks after me when I am sick.[cite: 5]",
+    "qVi": "Bạn tôi rất ______. Cô ấy thường chăm sóc tôi khi tôi bị ốm.",
+    "key": ["looks after me when I am sick"],
+    "opts": ["funny", "active", "caring", "clever"],
+    "optsVi": ["hài hước", "năng động", "chu đáo / biết chăm sóc", "thông minh"],
+    "correct": 2,
+    "exp": "Hành động ân cần chăm sóc bạn khi ốm (looks after me when I am sick) là đặc tính của một người <b>caring</b> (chu đáo, biết quan tâm)[cite: 5].",
+    "tags": ["topic_community", "skill_vocab_core"]
+  },
+  {
+    "q": "Patrick is very ______. He always does well in his tests.[cite: 5]",
+    "qVi": "Patrick rất ______. Cậu ấy luôn làm bài rất tốt trong các bài kiểm tra.",
+    "key": ["does well in his tests"],
+    "opts": ["active", "clever", "friendly", "shy"],
+    "optsVi": ["năng động", "thông minh / học giỏi", "thân thiện", "nhút nhát"],
+    "correct": 1,
+    "exp": "Việc luôn đạt kết quả cao trong các bài kiểm tra (does well in his tests) chứng tỏ Patrick là người <b>clever</b> (thông minh, sáng dạ)[cite: 5].",
+    "tags": ["topic_edu", "skill_vocab_core"]
+  },
+  {
+    "q": "Lan is really ______. She always helps other people.[cite: 5]",
+    "qVi": "Lan thực sự rất ______. Cô ấy luôn giúp đỡ những người khác.",
+    "key": ["helps other people"],
+    "opts": ["kind", "careful", "funny", "confident"],
+    "optsVi": ["tốt bụng", "cẩn thận", "hài hước", "tự tin"],
+    "correct": 0,
+    "exp": "Sẵn lòng giúp đỡ mọi người xung quanh (helps other people) là biểu hiện của lòng tốt: <b>kind</b> (tốt bụng, tử tế)[cite: 5].",
+    "tags": ["topic_community", "skill_vocab_core"]
+  },
+  {
+    "q": "Mi has short ______ dark hair and big round eyes.[cite: 5]",
+    "qVi": "Mi có mái tóc đen ______ ngắn và đôi mắt to tròn.",
+    "key": ["short", "dark hair"],
+    "opts": ["straight", "blonde", "curly", "tall"],
+    "optsVi": ["thẳng", "màu vàng hoe", "xoăn / uốn lượn", "cao"],
+    "correct": 2,
+    "exp": "Trật tự tính từ miêu tả tóc: <b>Size/Length (short) + Shape (curly/straight) + Color (dark) + hair</b>[cite: 5]. Cả 'straight' và 'curly' đều đúng ngữ pháp, nhưng đối chiếu với câu hỏi số 29 ngay bên dưới, đáp án chuẩn của bộ đề là <b>curly</b> (tóc xoăn)[cite: 5].",
+    "tags": ["topic_community", "skill_vocab_colloc"]
+  },
+  {
+    "q": "Mi has short curly dark hair and big ______ eyes.[cite: 5]",
+    "qVi": "Mi có mái tóc đen ngắn xoăn và đôi mắt ______ to.",
+    "key": ["big", "eyes"],
+    "opts": ["round", "square", "small", "long"],
+    "optsVi": ["tròn", "hình vuông", "nhỏ", "dài"],
+    "correct": 0,
+    "exp": "Cụm từ miêu tả đôi mắt đẹp quen thuộc trong tiếng Anh: <b>big round eyes</b> (đôi mắt to tròn)[cite: 5]. Mắt không thể hình vuông (square) hoặc dài (long)[cite: 5].",
+    "tags": ["topic_community", "skill_vocab_colloc"]
+  },
+  {
+    "q": "She is willing to help others in the camp. She is very ______.[cite: 5]",
+    "qVi": "Cô ấy sẵn sàng giúp đỡ những người khác trong khu trại. Cô ấy rất ______.",
+    "key": ["willing to help others"],
+    "opts": ["kind", "shy", "talkative", "funny"],
+    "optsVi": ["tốt bụng", "nhút nhát", "lắm lời", "hài hước"],
+    "correct": 0,
+    "exp": "Sự sẵn lòng giúp đỡ người khác (willing to help others) chứng tỏ tính cách <b>kind</b> (tốt bụng, hay giúp đỡ)[cite: 5].",
+    "tags": ["topic_community", "skill_vocab_core"]
+  },
+  {
+    "q": "I have a younger brother. He is very active and ______. He makes me laugh a lot.[cite: 5]",
+    "qVi": "Tôi có một em trai. Em ấy rất năng động và ______. Em ấy làm tôi cười rất nhiều.",
+    "key": ["makes me laugh a lot"],
+    "opts": ["boring", "shy", "funny", "careful"],
+    "optsVi": ["nhàm chán", "nhút nhát", "hài hước / vui nhộn", "cẩn thận"],
+    "correct": 2,
+    "exp": "Khả năng chọc cười người khác (makes me laugh a lot) là đặc điểm của một người <b>funny</b> (hài hước, vui tính)[cite: 5].",
+    "tags": ["topic_family", "skill_vocab_core"]
+  },
+  {
+    "q": "At school, my teachers are very kind and ______.[cite: 5]",
+    "qVi": "Ở trường, các thầy cô giáo của tôi rất tốt bụng và ______.",
+    "key": ["kind and"],
+    "opts": ["funny", "caring", "shy", "round"],
+    "optsVi": ["hài hước", "chu đáo / biết quan tâm", "nhút nhát", "tròn"],
+    "correct": 1,
+    "exp": "Tính từ đồng điệu ghép cặp với 'kind' (tốt bụng) để miêu tả phẩm chất nhà giáo là <b>caring</b> (chu đáo, tận tâm, biết quan tâm)[cite: 5].",
+    "tags": ["topic_edu", "skill_vocab_colloc"]
+  },
+  {
+    "q": "We may look very much alike in ______ but we have different personalities.[cite: 5]",
+    "qVi": "Chúng tôi trông có thể rất giống nhau về ______ nhưng chúng tôi lại có tính cách khác nhau.",
+    "key": ["look very much alike in", "different personalities"],
+    "opts": ["appearance", "character", "clothes", "friends"],
+    "optsVi": ["ngoại hình / vẻ bề ngoài", "tính cách", "quần áo", "bạn bè"],
+    "correct": 0,
+    "exp": "sự tương phản giữa bên ngoài và bên trong: giống nhau về <b>appearance</b> (ngoại hình, vẻ bề ngoài) nhưng khác nhau về 'personalities' (tính cách)[cite: 5].",
+    "tags": ["topic_family", "skill_vocab_core"]
+  },
+  {
+    "q": "An introvert, Greg prefers indoor activities such as reading. His presence is hardly noticed as he is as ______ as a mouse.[cite: 5]",
+    "qVi": "Là một người hướng nội, Greg thích các hoạt động trong nhà như đọc sách. Sự hiện diện của anh ấy hầu như không được chú ý vì anh ấy ______ như một chú chuột.",
+    "key": ["introvert", "hardly noticed", "as a mouse"],
+    "opts": ["active", "talkative", "quiet", "funny"],
+    "optsVi": ["năng động", "lắm lời", "yên lặng / im ắng", "hài hước"],
+    "correct": 2,
+    "exp": "Thành ngữ so sánh (Idiom): <b>as quiet as a mouse</b> có nghĩa là <i>'im như thóc / yên lặng như một chú chuột'</i>, miêu tả người cực kỳ ít nói hoặc không gây tiếng động[cite: 5].",
+    "tags": ["topic_community", "skill_vocab_colloc"]
+  },
+  {
+    "q": "I am the total opposite. I am an ______ person. I love all outdoor activities especially swimming.[cite: 5]",
+    "qVi": "Tôi thì hoàn toàn trái ngược. Tôi là một người ______. Tôi yêu thích tất cả các hoạt động ngoài trời, đặc biệt là bơi lội.",
+    "key": ["total opposite", "love all outdoor activities"],
+    "opts": ["active", "shy", "quiet", "careful"],
+    "optsVi": ["năng động / tích cực", "nhút nhát", "yên lặng", "cẩn thận"],
+    "correct": 0,
+    "exp": "Yêu thích vận động và các hoạt động ngoài trời (outdoor activities) là tính cách <b>active</b> (năng động)[cite: 5]. Chú ý mạo từ 'an' đứng trước tính từ bắt đầu bằng nguyên âm (an active person)[cite: 5].",
+    "tags": ["topic_hobbies", "skill_vocab_core"]
+  },
+  {
+    "q": "Many of my friends and relatives feel that I am as ______ as a magpie. I speak all the time.[cite: 5]",
+    "qVi": "Nhiều bạn bè và người thân cảm thấy tôi ______ như một con chim kháp (chim ác là). Tôi nói chuyện suốt ngày.",
+    "key": ["as a magpie", "speak all the time"],
+    "opts": ["quiet", "active", "talkative", "confident"],
+    "optsVi": ["yên lặng", "năng động", "lắm lời / nói nhiều", "tự tin"],
+    "correct": 2,
+    "exp": "Thành ngữ (Idiom): <b>as talkative/chatter as a magpie</b> có nghĩa là <i>'nói nhiều như khướu / lắm lời như chim ác là'</i>, được giải thích bởi câu 'I speak all the time'[cite: 5].",
+    "tags": ["topic_community", "skill_vocab_colloc"]
+  },
+  {
+    "q": "She has bright ______ eyes. They look very beautiful.[cite: 5]",
+    "qVi": "Cô ấy có đôi mắt màu ______ sáng. Chúng trông rất đẹp.",
+    "key": ["bright", "eyes"],
+    "opts": ["brown", "blonde", "short", "long"],
+    "optsVi": ["màu nâu", "màu vàng hoe (dùng cho tóc)", "ngắn", "dài"],
+    "correct": 0,
+    "exp": "Tính từ chỉ màu sắc tự nhiên của đôi mắt là <b>brown</b> (mắt màu nâu sáng)[cite: 5]. 'Blonde' chỉ dùng để miêu tả màu tóc vàng hoe, không dùng cho mắt[cite: 5].",
+    "tags": ["topic_community", "skill_vocab_colloc"]
+  },
+  {
+    "q": "Nhi is an active girl and never feels ______. She often tells me her interesting jokes.[cite: 5]",
+    "qVi": "Nhi là một cô gái năng động và không bao giờ cảm thấy ______. Cô ấy thường kể cho tôi nghe những câu chuyện cười thú vị.",
+    "key": ["active girl", "never feels", "interesting jokes"],
+    "opts": ["happy", "sad", "confident", "clever"],
+    "optsVi": ["vui vẻ / hạnh phúc", "buồn bã", "tự tin", "thông minh"],
+    "correct": 1,
+    "exp": "Một người năng động và hay kể chuyện cười sẽ không bao giờ cảm thấy <b>sad</b> (buồn bã, ủ rũ)[cite: 5]. Từ 'never' (không bao giờ) mang nghĩa phủ định[cite: 5].",
+    "tags": ["topic_community", "skill_vocab_core"]
+  },
+  {
+    "q": "Duy is tall and a bit ______ with short spiky hair and bright eyes.[cite: 5]",
+    "qVi": "Duy cao và hơi ______ với mái tóc ngắn dựng đứng và đôi mắt sáng.",
+    "key": ["tall and a bit"],
+    "opts": ["slim", "fat", "thin", "small"],
+    "optsVi": ["mảnh khảnh / thon thả", "béo / mập", "gầy gò (hơi tiêu cực)", "nhỏ bé"],
+    "correct": 0,
+    "exp": "Trong ngữ cảnh khen ngợi ngoại hình cân đối (tóc đẹp, mắt sáng), tính từ <b>slim</b> (mảnh khảnh, thon thả - mang sắc thái tích cực) phù hợp hơn 'thin' (gầy gò - sắc thái trung tính/tiêu cực)[cite: 5].",
+    "tags": ["topic_community", "skill_vocab_colloc"]
+  },
+  {
+    "q": "Vy is ______ and slim with long hair and big round eyes.[cite: 5]",
+    "qVi": "Vy ______ và thon thả với mái tóc dài và đôi mắt to tròn.",
+    "key": ["and slim"],
+    "opts": ["tall", "short", "big", "small"],
+    "optsVi": ["cao", "thấp", "to lớn", "nhỏ bé"],
+    "correct": 0,
+    "exp": "Cụm từ miêu tả vóc dáng lý tưởng thường đi liền với nhau: <b>tall and slim</b> (cao ráo và thon thả)[cite: 5].",
+    "tags": ["topic_community", "skill_vocab_colloc"]
+  },
+  {
+    "q": "He is 7 years old. He has ______ hair and big brown eyes.[cite: 5]",
+    "qVi": "Cậu ấy 7 tuổi. Cậu ấy có mái tóc ______ và đôi mắt to màu nâu.",
+    "key": ["has", "hair"],
+    "opts": ["black", "fat", "round", "tall"],
+    "optsVi": ["màu đen", "béo", "tròn", "cao"],
+    "correct": 0,
+    "exp": "Tính từ bổ nghĩa cho tóc (hair) trong các phương án trên chỉ có thể là màu sắc: <b>black hair</b> (tóc đen)[cite: 5]. Các từ còn lại dùng cho vóc dáng hoặc khuôn mặt[cite: 5].",
+    "tags": ["topic_family", "skill_vocab_colloc"]
+  },
+  {
+    "q": "Sometimes, I visit my grandmother. She is 63 years old with ______ white hair.[cite: 5]",
+    "qVi": "Thỉnh thoảng, tôi đến thăm bà tôi. Bà 63 tuổi với mái tóc bạc ______.",
+    "key": ["with", "white hair"],
+    "opts": ["long", "tall", "heavy", "big"],
+    "optsVi": ["dài", "cao", "nặng", "to lớn"],
+    "correct": 0,
+    "exp": "Miêu tả độ dài của mái tóc sử dụng tính từ <b>long</b> (tóc dài)[cite: 5]. 'Tall' dùng cho chiều cao người, không dùng cho tóc[cite: 5].",
+    "tags": ["topic_family", "skill_vocab_colloc"]
+  },
+  {
+    "q": "He has ______ hair and blue eyes.[cite: 5]",
+    "qVi": "Anh ấy có mái tóc ______ và đôi mắt màu xanh dương.",
+    "key": ["has", "hair"],
+    "opts": ["blonde", "fat", "slim", "tall"],
+    "optsVi": ["màu vàng hoe", "béo", "mảnh khảnh", "cao"],
+    "correct": 0,
+    "exp": "Màu tóc đặc trưng của người phương Tây: <b>blonde hair</b> (mái tóc màu vàng hoe)[cite: 5].",
+    "tags": ["topic_community", "skill_vocab_colloc"]
+  },
+  {
+    "q": "What is she ______? She's very kind and creative.[cite: 5]",
+    "qVi": "Tính cách của cô ấy ______ thế nào? Cô ấy rất tốt bụng và sáng tạo.",
+    "key": ["What is she", "kind and creative"],
+    "opts": ["look", "like", "love", "do"],
+    "optsVi": ["nhìn", "như thế nào (giới từ)", "yêu", "làm"],
+    "correct": 1,
+    "exp": "Cấu trúc hỏi về tính cách: <b>What + be + S + like?</b> (Ai đó có tính cách như thế nào?)[cite: 5]. Câu trả lời là các tính từ chỉ tính cách (kind, creative)[cite: 5].",
+    "tags": ["topic_community", "skill_vocab_colloc"]
+  },
+  {
+    "q": "I am a ______ person. I like making new things.[cite: 5]",
+    "qVi": "Tôi là một người ______. Tôi thích tạo ra những thứ mới mẻ.",
+    "key": ["making new things"],
+    "opts": ["creative", "shy", "boring", "quiet"],
+    "optsVi": ["sáng tạo", "nhút nhát", "nhàm chán", "yên lặng"],
+    "correct": 0,
+    "exp": "Sở thích tạo ra những món đồ/ý tưởng mới (making new things) là dấu hiệu của người <b>creative</b> (sáng tạo)[cite: 5].",
+    "tags": ["topic_hobbies", "skill_vocab_core"]
+  },
+  {
+    "q": "Lena has short ______ hair with blue eyes.[cite: 5]",
+    "qVi": "Lena có mái tóc ngắn ______ với đôi mắt màu xanh dương.",
+    "key": ["short", "hair"],
+    "opts": ["blonde", "big", "round", "tall"],
+    "optsVi": ["màu vàng hoe", "to lớn", "tròn", "cao"],
+    "correct": 0,
+    "exp": "Trật tự từ miêu tả tóc: <b>Length (short) + Color (blonde) + hair</b> (mái tóc vàng ngắn)[cite: 5].",
+    "tags": ["topic_community", "skill_vocab_colloc"]
+  },
+  {
+    "q": "Get up! Don’t be lazy. Be ______![cite: 5]",
+    "qVi": "Dậy đi! Đừng lười biếng nữa. Hãy ______ lên!",
+    "key": ["Don’t be lazy", "Be"],
+    "opts": ["active", "kind", "shy", "quiet"],
+    "optsVi": ["năng động / tích cực", "tốt bụng", "nhút nhát", "yên lặng"],
+    "correct": 0,
+    "exp": "Tính từ trái nghĩa trực tiếp với 'lazy' (lười biếng) trong ngữ cảnh thúc giục vận động là <b>active</b> (năng động, nhanh nhẹn)[cite: 5].",
+    "tags": ["topic_health", "skill_vocab_core"]
+  },
+  {
+    "q": "You must be ______ when you open that door.[cite: 5]",
+    "qVi": "Bạn phải ______ khi mở cánh cửa đó ra.",
+    "key": ["must be", "open that door"],
+    "opts": ["careful", "friendly", "talkative", "active"],
+    "optsVi": ["cẩn thận / thận trọng", "thân thiện", "lắm lời", "năng động"],
+    "correct": 0,
+    "exp": "Động từ khuyết thiếu 'must' (phải) mang tính cảnh báo an toàn, do đó cần phải <b>careful</b> (cẩn thận, thận trọng) khi mở cửa[cite: 5].",
+    "tags": ["topic_health", "skill_vocab_core"]
+  },
+  {
+    "q": "It’s nice to meet such a ______ person like you.[cite: 5]",
+    "qVi": "Thật vui khi được gặp một người ______ như bạn.",
+    "key": ["nice to meet such a"],
+    "opts": ["friendly", "shy", "boring", "quiet"],
+    "optsVi": ["thân thiện / cởi mở", "nhút nhát", "nhàm chán", "yên lặng"],
+    "correct": 0,
+    "exp": "Trong tình huống giao tiếp gặp gỡ lần đầu (nice to meet), lời khen mang tính tích cực và tự nhiên nhất là <b>friendly</b> (thân thiện, dễ mến)[cite: 5].",
+    "tags": ["topic_community", "skill_vocab_core"]
+  },
+  {
+    "q": "Lan is very ______. She is always on the phone chatting to friends.[cite: 5]",
+    "qVi": "Lan rất ______. Cô ấy lúc nào cũng ôm điện thoại để trò chuyện với bạn bè.",
+    "key": ["always on the phone chatting"],
+    "opts": ["talkative", "kind", "shy", "clever"],
+    "optsVi": ["hay nói / thích nói chuyện", "tốt bụng", "nhút nhát", "thông minh"],
+    "correct": 0,
+    "exp": "Thói quen liên tục gọi điện thoại trò chuyện với bạn bè (always chatting) chỉ tính cách <b>talkative</b> (thích nói chuyện, hay giao tiếp)[cite: 5].",
+    "tags": ["topic_community", "skill_vocab_core"]
+  },
+  {
+    "q": "Viet is very ______. He always has a lot of new ideas.[cite: 5]",
+    "qVi": "Việt rất ______. Cậu ấy luôn có rất nhiều ý tưởng mới.",
+    "key": ["a lot of new ideas"],
+    "opts": ["creative", "funny", "shy", "careful"],
+    "optsVi": ["sáng tạo", "hài hước", "nhút nhát", "cẩn thận"],
+    "correct": 0,
+    "exp": "Việc luôn có dồi dào các ý tưởng mới mẻ (a lot of new ideas) là minh chứng cho tính <b>creative</b> (sáng tạo)[cite: 5].",
+    "tags": ["topic_edu", "skill_vocab_core"]
+  },
+  {
+    "q": "Both of us are tall and slim. I’m a bit quiet and ______, and Janet is kind and friendly.[cite: 5]",
+    "qVi": "Cả hai chúng tôi đều cao ráo và thon thả. Tôi thì hơi ít nói và ______, còn Janet thì tốt bụng và thân thiện.",
+    "key": ["quiet and"],
+    "opts": ["shy", "talkative", "funny", "active"],
+    "optsVi": ["nhút nhát / bẽn lẽn", "lắm lời", "hài hước", "năng động"],
+    "correct": 0,
+    "exp": "Tính từ ghép cặp tương đồng về tính cách hướng nội đi liền với 'quiet' (ít nói) là <b>shy</b> (nhút nhát, hay xấu hổ)[cite: 5].",
+    "tags": ["topic_community", "skill_vocab_colloc"]
+  },
+  {
+    "q": "She has a round face with ______ black hair.[cite: 5]",
+    "qVi": "Cô ấy có khuôn mặt tròn với mái tóc đen ______.",
+    "key": ["with", "black hair"],
+    "opts": ["long", "tall", "round", "big"],
+    "optsVi": ["dài", "cao", "tròn", "to lớn"],
+    "correct": 0,
+    "exp": "Cụm từ miêu tả tóc chuẩn xác: <b>long black hair</b> (mái tóc đen dài)[cite: 5].",
+    "tags": ["topic_community", "skill_vocab_colloc"]
+  },
+  {
+    "q": "Chi's hair is long and black, and her nose is ______.[cite: 5]",
+    "qVi": "Tóc của Chi dài và đen, còn mũi của cô ấy thì ______.",
+    "key": ["nose is"],
+    "opts": ["straight", "round", "blonde", "curly"],
+    "optsVi": ["thẳng / cao", "tròn", "vàng hoe", "xoăn"],
+    "correct": 0,
+    "exp": "Tính từ phổ biến và chuẩn xác dùng để miêu tả dáng mũi dọc dừa/mũi thẳng là <b>straight nose</b>[cite: 5]. 'Blonde/curly' dùng cho tóc, 'round' dùng cho khuôn mặt hoặc mắt[cite: 5].",
+    "tags": ["topic_community", "skill_vocab_colloc"]
+  },
+  {
+    "q": "Huy is very ______. He’s not controlled in any way by other people or things.[cite: 5]",
+    "qVi": "Huy rất ______. Cậu ấy không bị kiểm soát hay chi phối theo bất kỳ cách nào bởi người khác hay hoàn cảnh.",
+    "key": ["not controlled in any way by other people"],
+    "opts": ["independent", "shy", "kind", "caring"],
+    "optsVi": ["độc lập / tự lập", "nhút nhát", "tốt bụng", "chu đáo"],
+    "correct": 0,
+    "exp": "Việc tự do, không bị phụ thuộc hay kiểm soát bởi người khác (not controlled by other people) chính là định nghĩa của từ <b>independent</b> (độc lập, tự chủ)[cite: 5].",
+    "tags": ["topic_community", "skill_vocab_core"]
+  },
+  {
+    "q": "She has ______ eyes and a round face.[cite: 5]",
+    "qVi": "Cô ấy có đôi mắt ______ và một khuôn mặt tròn.",
+    "key": ["eyes"],
+    "opts": ["big", "tall", "short", "long"],
+    "optsVi": ["to tròn", "cao", "ngắn", "dài"],
+    "correct": 0,
+    "exp": "Miêu tả vẻ đẹp của đôi mắt thường dùng tính từ <b>big eyes</b> (đôi mắt to tròn)[cite: 5]. Mắt không thể dùng 'tall' (cao) hay 'long/short' (dài/ngắn)[cite: 5].",
+    "tags": ["topic_community", "skill_vocab_colloc"]
+  },
+  {
+    "q": "Owen plays football well. He is tall and ______.[cite: 5]",
+    "qVi": "Owen chơi bóng đá rất giỏi. Cậu ấy cao ráo và ______.",
+    "key": ["plays football well", "tall and"],
+    "opts": ["sporty", "fat", "short", "round"],
+    "optsVi": ["thích thể thao / dáng thể thao", "béo", "thấp", "tròn"],
+    "correct": 0,
+    "exp": "Một người chơi giỏi thể thao (plays football well) sẽ có vóc dáng hoặc tính cách <b>sporty</b> (năng động, có dáng thể thao, yêu thể thao)[cite: 5].",
+    "tags": ["topic_hobbies", "skill_vocab_core"]
+  },
+  {
+    "q": "She has bright brown ______.[cite: 5]",
+    "qVi": "Cô ấy có đôi ______ màu nâu sáng.",
+    "key": ["bright brown"],
+    "opts": ["eyes", "hair", "nose", "face"],
+    "optsVi": ["đôi mắt", "mái tóc", "chiếc mũi", "khuôn mặt"],
+    "correct": 0,
+    "exp": "Tính từ 'bright' (sáng, thông minh, long lanh) và 'brown' (màu nâu) kết hợp tự nhiên nhất để miêu tả <b>eyes</b> (đôi mắt nâu sáng)[cite: 5]. Tóc dùng 'shiny' thay vì 'bright'[cite: 5].",
+    "tags": ["topic_community", "skill_vocab_colloc"]
+  },
+  {
+    "q": "What does your new classmate look like? She’s tall with short ______ hair.[cite: 5]",
+    "qVi": "Bạn học mới của bạn trông như thế nào? Cô ấy cao ráo với mái tóc ngắn ______.",
+    "key": ["short", "hair"],
+    "opts": ["curly", "straight", "round", "big"],
+    "optsVi": ["xoăn", "thẳng", "tròn", "to lớn"],
+    "correct": 0,
+    "exp": "Miêu tả kiểu dáng của mái tóc ngắn có thể dùng <b>curly</b> (tóc ngắn xoăn) hoặc 'straight' (tóc ngắn thẳng)[cite: 5]. Trong các đáp án của bộ đề, <b>curly</b> được ưu tiên lựa chọn làm đáp án chuẩn[cite: 5].",
+    "tags": ["topic_edu", "skill_vocab_colloc"]
+  },
+  {
+    "q": "I am the total opposite of my brother. He is an introvert, but I am very ______.[cite: 5]",
+    "qVi": "Tôi hoàn toàn trái ngược với anh trai tôi. Anh ấy là một người hướng nội, nhưng tôi thì lại rất ______.",
+    "key": ["total opposite", "introvert", "but I am very"],
+    "opts": ["talkative", "quiet", "shy", "boring"],
+    "optsVi": ["lắm lời / thích giao tiếp", "yên lặng", "nhút nhát", "nhàm chán"],
+    "correct": 0,
+    "exp": "Tính cách trái ngược hoàn toàn (total opposite) với một người hướng nội, ít nói (introvert/quiet) chính là người hướng ngoại, thích giao tiếp và <b>talkative</b> (hay nói, nói nhiều)[cite: 5].",
+    "tags": ["topic_family", "skill_vocab_core"]
+  }
+]     
+          
+          ;
+
+        // Cấu hình bài thi
+        const QUIZ_PASSWORD = "6003";
+        const LESSON_NAME = "Unit 3";
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyOqwwh5ZEWXAyapckL0ZeGuf-mZDjudlUNsaFmoTCc2RTfGQ5fi-OtHKQlllVe8iAYyQ/exec';
+
+        let currentUser = "";
+        let currentClass = "";
+
+        let answeredSet = new Set();
+        let correctCount = 0;
+        const totalCount = quizData.length;
+
+        function checkLogin() {
+            const nameInput = document.getElementById('student-name').value.trim();
+            const classInput = document.getElementById('student-class').value.trim();
+            const passInput = document.getElementById('student-pass').value;
+            const errorMsg = document.getElementById('login-error');
+
+            if (nameInput === "" || classInput === "" || passInput !== QUIZ_PASSWORD) {
+                errorMsg.style.display = "block";
+            } else {
+                currentUser = nameInput;
+                currentClass = classInput;
+                document.getElementById('login-overlay').style.display = "none";
+                document.querySelector('.header-title').innerText = `${LESSON_NAME} - ${currentUser} (${currentClass})`;
+            }
+        }
+
+        function initQuiz() {
+            const container = document.getElementById('quiz-container');
+            const nav = document.getElementById('q-nav');
+            document.getElementById('stat-total').innerText = totalCount;
+            document.getElementById('final-total').innerText = totalCount;
+
+            quizData.forEach((item, index) => {
+                const displayIndex = index + 1; 
+                const card = document.createElement('div');
+                card.className = 'question-card';
+                card.id = `q-card-${index}`;
+                
+                card.innerHTML = `
+                    <div class="question-text">
+                        Question ${displayIndex}. ${item.q}
+                        <div class="trans-text" id="trans-q-${index}">${item.qVi}</div>
+                    </div>
+
+                    <button class="btn-hint-toggle" onclick="toggleHint(${index})">
+                        💡 Gợi ý (Keywords)
+                    </button>
+                    <div class="hint-content" id="hint-box-${index}">
+                        <strong>Keywords:</strong> ${item.key ? item.key.join('; ') : 'Không có gợi ý đặc biệt'}
+                    </div>
+
+                    <div class="options-list">
+                        ${item.opts.map((opt, i) => `
+                            <button class="option-btn" onclick="checkAnswer(this, ${index}, ${i})">
+                                <span><b>${String.fromCharCode(65 + i)}.</b> ${opt}</span>
+                                <span class="trans-text" id="trans-opt-${index}-${i}">(${item.optsVi[i]})</span>
+                            </button>
+                        `).join('')}
+                    </div>
+                    
+                    <div class="explanation-box" id="exp-${index}"></div>
+
+                    <button class="btn-trans-toggle" id="btn-trans-${index}" onclick="toggleTrans(${index})" disabled title="Hãy chọn đáp án trước để xem dịch nghĩa">
+                        🔒 Dịch nghĩa
+                    </button>
+                `;
+                container.appendChild(card);
+
+                const qNum = document.createElement('div');
+                qNum.className = 'q-num';
+                qNum.id = `nav-${index}`;
+                qNum.innerText = displayIndex;
+                qNum.onclick = () => {
+                    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    if(window.innerWidth <= 768) toggleSidebar();
+                };
+                nav.appendChild(qNum);
+            });
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+
+        function toggleHint(index) {
+            document.getElementById(`hint-box-${index}`).classList.toggle('show');
+        }
+
+        function toggleTrans(index) {
+            const qTrans = document.getElementById(`trans-q-${index}`);
+            const btn = document.getElementById(`btn-trans-${index}`);
+            
+            qTrans.classList.toggle('show');
+            for (let i = 0; i < 4; i++) {
+                const optTrans = document.getElementById(`trans-opt-${index}-${i}`);
+                if(optTrans) optTrans.classList.toggle('show');
+            }
+            
+            if (qTrans.classList.contains('show')) {
+                btn.innerHTML = '🌐 Ẩn dịch nghĩa';
+                btn.style.backgroundColor = '#e8f0fe';
+                btn.style.color = '#1a73e8';
+            } else {
+                btn.innerHTML = '🌐 Dịch nghĩa';
+                btn.style.backgroundColor = '#f1f3f4';
+                btn.style.color = '#555';
+            }
+        }
+
+        function updateStats() {
+            document.getElementById('stat-correct').innerText = correctCount;
+            const score = (correctCount / totalCount * 10).toFixed(1);
+            document.getElementById('stat-score').innerText = score;
+        }
+
+        function checkAnswer(btn, qIndex, optIndex) {
+            if (answeredSet.has(qIndex)) return;
+            answeredSet.add(qIndex);
+
+            const buttons = btn.parentElement.querySelectorAll('.option-btn');
+            const correctIndex = quizData[qIndex].correct;
+            const expBox = document.getElementById(`exp-${qIndex}`);
+            const transBtn = document.getElementById(`btn-trans-${qIndex}`);
+            const navNum = document.getElementById(`nav-${qIndex}`);
+
+            if (transBtn.hasAttribute('disabled')) {
+                transBtn.removeAttribute('disabled');
+                transBtn.innerHTML = '🌐 Dịch nghĩa';
+            }
+
+            if (optIndex === correctIndex) {
+                btn.classList.add('correct');
+                navNum.classList.add('done-correct');
+                correctCount++;
+            } else {
+                btn.classList.add('wrong');
+                navNum.classList.add('done-wrong');
+                buttons[correctIndex].classList.add('correct');
+            }
+
+            updateStats();
+            buttons.forEach(b => b.classList.add('disabled'));
+            const percent = (answeredSet.size / quizData.length) * 100;
+            document.getElementById('progress-bar').style.width = percent + '%';
+
+            expBox.innerHTML = `<strong>Giải thích chi tiết:</strong><br>${quizData[qIndex].exp}`;
+            expBox.style.display = 'block';
+        }
+
+        // === THUẬT TOÁN ĐÁNH GIÁ SƯ PHẠM TỰ ĐỘNG (3A LOGIC) ===
+        function generateFeedbackReport(scoresObj) {
+            let totalPercentage = (correctCount / totalCount) * 100;
+            let report = { level: "", strengths: [], weaknesses: [], actionPlan: [] };
+
+            // 1. Phân loại Mức độ nhận thức tổng quát
+            if (totalPercentage >= 85) {
+                report.level = "Xuất sắc (Nắm rất vững kiến thức nền tảng và am hiểu chuyên sâu các chủ đề).";
+            } else if (totalPercentage >= 65) {
+                report.level = "Khá / Giỏi (Tư duy ngôn ngữ tốt, tuy nhiên cần khắc phục một số lỗi ở trọng tâm bị hổng).";
+            } else if (totalPercentage >= 50) {
+                report.level = "Trung bình (Nhận diện được cơ bản dạng bài nhưng còn thiếu chính xác ở cấu trúc khó).";
+            } else {
+                report.level = "Cần cố gắng (Chưa vững kiến thức nền tảng; cần ôn tập lại theo định hướng bên dưới).";
+            }
+
+            // 2. Chẩn đoán tự động ánh xạ từ Từ điển feedbackConfig
+            for (let tag in scoresObj) {
+                let score = scoresObj[tag];
+                let config = feedbackConfig[tag];
+                
+                if (config) {
+                    if (score < 60) { // Điểm yếu (<60%)
+                        report.weaknesses.push(`<b>[${config.title}]</b>: ${config.weak}`);
+                        report.actionPlan.push(`👉 <b>Khắc phục ${config.title}</b>: ${config.action}`);
+                    } else if (score >= 80) { // Điểm mạnh (>=80%)
+                        report.strengths.push(`<b>[${config.title}]</b>: ${config.strength}`);
+                    }
+                }
+            }
+
+            // 3. Xử lý trường hợp dự phòng (Fallback)
+            if (report.weaknesses.length === 0) {
+                report.weaknesses.push("Không phát hiện lỗ hổng kiến thức nghiêm trọng trong bài làm này.");
+                report.actionPlan.push("🎯 <b>Mục tiêu tiếp theo</b>: Tiếp tục duy trì phong độ và thử thách với các đề nâng cao (Advance level).");
+            }
+            if (report.strengths.length === 0) {
+                report.strengths.push("Đã có tinh thần cố gắng hoàn thành bài thi.");
+            }
+
+            return report;
+        }
+
+        function submitQuiz() {
+            if (window.innerWidth <= 768) toggleSidebar();
+            if (answeredSet.size < totalCount) {
+                if (!confirm(`Bạn mới làm ${answeredSet.size}/${totalCount} câu. Bạn có chắc muốn nộp bài không?`)) return;
+            }
+
+            const submitBtn = document.querySelector('.sidebar .btn-submit');
+            submitBtn.innerText = "Đang gửi...";
+            submitBtn.disabled = true;
+
+            // Tính toán thống kê động theo hệ thống Dual-Tags
+            let stats = {};
+            let correctList = [];
+            let wrongList = [];
+
+            for (let i = 0; i < totalCount; i++) {
+                // Lấy mảng tags, hỗ trợ fallback nếu câu hỏi cũ chỉ dùng 1 chuỗi tag
+                let tagsList = quizData[i].tags || (quizData[i].tag ? [quizData[i].tag] : ['skill_vocab_core']);
+                
+                const navNum = document.getElementById(`nav-${i}`);
+                let isCorrect = navNum.classList.contains('done-correct');
+
+                if (isCorrect) {
+                    correctList.push(i + 1);
+                } else {
+                    wrongList.push(i + 1);
+                }
+
+                // Cộng dồn số liệu cho từng tag trong câu hỏi
+                tagsList.forEach(tag => {
+                    if (!stats[tag]) stats[tag] = { total: 0, correct: 0 };
+                    stats[tag].total++;
+                    if (isCorrect) {
+                        stats[tag].correct++;
+                    }
+                });
+            }
+
+            // Quy đổi sang tỉ lệ phần trăm cho từng tag
+            let scoresObj = {};
+            for (let tag in stats) {
+                scoresObj[tag] = stats[tag].total > 0 ? (stats[tag].correct / stats[tag].total) * 100 : 100;
+            }
+
+            let report = generateFeedbackReport(scoresObj);
+            const finalScore = (correctCount / totalCount * 10).toFixed(1);
+
+            // Chuẩn bị dữ liệu gửi đi (URLSearchParams đảm bảo không bị chặn bởi CORS)
+            let formData = new URLSearchParams();
+            formData.append('studentName', currentUser);
+            formData.append('className', currentClass);
+            formData.append('quizName', LESSON_NAME);
+            formData.append('score', `${finalScore} (${correctCount}/${totalCount})`);
+            formData.append('correctAnswers', correctList.join(', '));
+            formData.append('wrongAnswers', wrongList.join(', '));
+            formData.append('level', report.level);
+            // Gỡ bỏ thẻ HTML <b> khi gửi vào Google Sheets để báo cáo dạng text sạch
+            formData.append('strengths', report.strengths.map(s => s.replace(/<[^>]*>?/gm, '')).join('\n'));
+            formData.append('weaknesses', report.weaknesses.map(w => w.replace(/<[^>]*>?/gm, '')).join('\n'));
+            formData.append('actionPlan', report.actionPlan.map(a => a.replace(/<[^>]*>?/gm, '')).join('\n'));
+
+            fetch(SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                body: formData
+            }).then(() => {
+                showResultModal(finalScore, report);
+                submitBtn.innerText = "Nộp bài";
+                submitBtn.disabled = false;
+            }).catch(() => {
+                alert("Đã ghi nhận bài làm nhưng máy chủ phản hồi chậm. Hệ thống sẽ tiếp tục hiển thị bảng đánh giá!");
+                showResultModal(finalScore, report);
+                submitBtn.innerText = "Nộp bài";
+                submitBtn.disabled = false;
+            });
+        }
+
+        function showResultModal(score, report) {
+            document.getElementById('final-score').innerText = score;
+            document.getElementById('final-correct').innerText = correctCount;
+            
+            // Hiển thị nội dung sư phạm lên Modal
+            document.getElementById('eval-level').innerText = report.level;
+            
+            const ulStrengths = document.getElementById('eval-strengths');
+            ulStrengths.innerHTML = "";
+            report.strengths.forEach(s => ulStrengths.innerHTML += `<li>${s}</li>`);
+            
+            const ulWeaknesses = document.getElementById('eval-weaknesses');
+            ulWeaknesses.innerHTML = "";
+            report.weaknesses.forEach(w => ulWeaknesses.innerHTML += `<li>${w}</li>`);
+            
+            const ulAction = document.getElementById('eval-action');
+            ulAction.innerHTML = "";
+            report.actionPlan.forEach(a => ulAction.innerHTML += `<li>${a}</li>`);
+
+            document.getElementById('result-modal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('result-modal').style.display = 'none';
+        }
+
+        window.onload = initQuiz;
+    </script>
+</body>
+</html>
